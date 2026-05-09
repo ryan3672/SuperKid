@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { supabase } from "./supabase";
 
 const WORD_BANK = [
   { word: "Peculiar", emoji: "🔍", definition: "Something strange or different in an interesting way.", visual: "Imagine a dog wearing tiny sunglasses and reading a newspaper!", example: "That peculiar sound under my bed was just my toy robot." },
@@ -38,9 +39,6 @@ function getTodayWord() {
   return WORD_BANK[day % WORD_BANK.length];
 }
 
-function ls(k, f) { try { const v = localStorage.getItem(k); return v !== null ? JSON.parse(v) : f; } catch { return f; } }
-function lss(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
-
 function Confetti({ active }) {
   const [pieces] = useState(() => Array.from({ length: 40 }, (_, i) => ({
     left: Math.random() * 100, size: 8 + Math.random() * 8,
@@ -59,6 +57,64 @@ function Confetti({ active }) {
           animationDelay: `${p.delay}s`, transform: `rotate(${p.rot}deg)`,
         }} />
       ))}
+    </div>
+  );
+}
+
+function LoginScreen({ onLogin }) {
+  const [code, setCode] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  async function handleLogin() {
+    const c = code.trim().toUpperCase();
+    if (!c) return;
+    setLoading(true); setError("");
+    try {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("family_code", c)
+        .single();
+      if (error && error.code === "PGRST116") {
+        const { data: newData, error: insertError } = await supabase
+          .from("profiles")
+          .insert({ family_code: c, points: 0, log: [], prizes: DEFAULT_PRIZES, word_history: [], used_date: "" })
+          .select()
+          .single();
+        if (insertError) throw insertError;
+        onLogin(c, newData);
+      } else if (error) {
+        throw error;
+      } else {
+        onLogin(c, data);
+      }
+    } catch (e) {
+      setError("Something went wrong. Try again!");
+    }
+    setLoading(false);
+  }
+
+  return (
+    <div style={{ minHeight: "100vh", background: "linear-gradient(160deg,#1a1a6e,#2d1b69 40%,#11998e 75%,#38ef7d)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
+      <div style={{ background: "rgba(255,255,255,0.12)", borderRadius: 24, padding: 36, width: "100%", maxWidth: 380, textAlign: "center", border: "2px solid rgba(255,255,255,0.2)" }}>
+        <div style={{ fontSize: 56, marginBottom: 12 }}>⭐</div>
+        <h1 style={{ color: "white", fontWeight: "bold", fontSize: 32, marginBottom: 8 }}>SuperKid</h1>
+        <p style={{ color: "rgba(255,255,255,0.6)", fontSize: 14, marginBottom: 28 }}>Enter your family code to get started. Share the same code across all your devices!</p>
+        <input
+          value={code}
+          onChange={e => setCode(e.target.value.toUpperCase())}
+          onKeyDown={e => e.key === "Enter" && handleLogin()}
+          placeholder="FAMILY CODE (e.g. RYAN)"
+          maxLength={10}
+          style={{ width: "100%", background: "rgba(255,255,255,0.15)", border: "2px solid rgba(255,255,255,0.3)", borderRadius: 14, padding: "14px 16px", color: "white", fontSize: 22, textAlign: "center", outline: "none", letterSpacing: 4, fontWeight: "bold", marginBottom: 12 }}
+        />
+        {error && <p style={{ color: "#FF6B6B", fontSize: 13, marginBottom: 10 }}>{error}</p>}
+        <button onClick={handleLogin} disabled={loading} style={{ width: "100%", background: "linear-gradient(135deg,#FF6B6B,#FF8E53)", border: "none", borderRadius: 14, padding: "16px", color: "white", fontWeight: "bold", fontSize: 20, cursor: "pointer" }}>
+          {loading ? "Loading..." : "Let's Go! 🚀"}
+        </button>
+        <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 12, marginTop: 16 }}>New code = new profile. Same code on any device = shared profile.</p>
+      </div>
     </div>
   );
 }
@@ -218,28 +274,75 @@ export default function App() {
   const today = new Date().toDateString();
   const w = getTodayWord();
 
-  const [pts, setPts] = useState(() => ls("sk_pts", 0));
-  const [log, setLog] = useState(() => ls("sk_log", []));
-  const [used, setUsed] = useState(() => ls("sk_used", null) === today);
-  const [history, setHistory] = useState(() => ls("sk_hist", []));
-  const [prizes, setPrizes] = useState(() => ls("sk_prizes", DEFAULT_PRIZES));
+  const [familyCode, setFamilyCode] = useState(() => localStorage.getItem("sk_code") || "");
+  const [profile, setProfile] = useState(null);
+  const [pts, setPts] = useState(0);
+  const [log, setLog] = useState([]);
+  const [used, setUsed] = useState(false);
+  const [history, setHistory] = useState([]);
+  const [prizes, setPrizes] = useState(DEFAULT_PRIZES);
   const [confetti, setConfetti] = useState(false);
   const [tab, setTab] = useState("word");
+  const [saving, setSaving] = useState(false);
 
-  function addPoints(delta, reason) {
+  useEffect(() => {
+    if (familyCode) loadProfile(familyCode);
+  }, []);
+
+  async function loadProfile(code) {
+    const { data, error } = await supabase.from("profiles").select("*").eq("family_code", code).single();
+    if (data) {
+      setProfile(data);
+      setPts(data.points || 0);
+      setLog(data.log || []);
+      setHistory(data.word_history || []);
+      setPrizes(data.prizes || DEFAULT_PRIZES);
+      setUsed(data.used_date === today);
+    }
+  }
+
+  async function saveProfile(updates) {
+    setSaving(true);
+    await supabase.from("profiles").update(updates).eq("family_code", familyCode);
+    setSaving(false);
+  }
+
+  function handleLogin(code, data) {
+    localStorage.setItem("sk_code", code);
+    setFamilyCode(code);
+    setProfile(data);
+    setPts(data.points || 0);
+    setLog(data.log || []);
+    setHistory(data.word_history || []);
+    setPrizes(data.prizes || DEFAULT_PRIZES);
+    setUsed(data.used_date === today);
+  }
+
+  async function addPoints(delta, reason) {
     const next = Math.max(0, pts + delta);
-    setPts(next); lss("sk_pts", next);
     const entry = { delta, reason, d: new Date().toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) };
-    const nl = [entry, ...log]; setLog(nl); lss("sk_log", nl);
+    const newLog = [entry, ...log];
+    setPts(next); setLog(newLog);
+    await saveProfile({ points: next, log: newLog });
     if (delta > 0) { setConfetti(true); setTimeout(() => setConfetti(false), 2000); }
   }
 
-  function handleWordUsed() {
-    addPoints(2, `Said "${w.word}" in a sentence`);
-    setUsed(true); lss("sk_used", today);
-    const nh = [{ word: w.word, emoji: w.emoji, used: true }, ...history.filter(x => x.word !== w.word)];
-    setHistory(nh); lss("sk_hist", nh);
+  async function handleWordUsed() {
+    const next = Math.max(0, pts + 2);
+    const entry = { delta: 2, reason: `Said "${w.word}" in a sentence`, d: new Date().toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) };
+    const newLog = [entry, ...log];
+    const newHistory = [{ word: w.word, emoji: w.emoji, used: true }, ...history.filter(x => x.word !== w.word)];
+    setPts(next); setLog(newLog); setUsed(true); setHistory(newHistory);
+    await saveProfile({ points: next, log: newLog, word_history: newHistory, used_date: today });
+    setConfetti(true); setTimeout(() => setConfetti(false), 2000);
   }
+
+  async function handleSavePrizes(p) {
+    setPrizes(p);
+    await saveProfile({ prizes: p });
+  }
+
+  if (!familyCode || !profile) return <LoginScreen onLogin={handleLogin} />;
 
   const TABS = [{ id: "word", label: "📖 Word" }, { id: "points", label: "⭐ Points" }, { id: "prizes", label: "🎁 Prizes" }, { id: "history", label: "📚 Words" }];
 
@@ -256,7 +359,7 @@ export default function App() {
       <div style={{ paddingBottom: 40 }}>
         <div style={{ padding: "22px 16px 14px", textAlign: "center", background: "rgba(0,0,0,0.15)", marginBottom: 14 }}>
           <div style={{ fontSize: 28, color: "white", fontWeight: "bold" }}>⭐ SuperKid</div>
-          <div style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", marginTop: 3 }}>{new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}</div>
+          <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", marginTop: 2 }}>Family code: {familyCode} {saving && "· saving..."}</div>
         </div>
         <div style={{ maxWidth: 460, margin: "0 auto", padding: "0 13px" }}>
           <div style={{ background: "rgba(255,255,255,0.15)", borderRadius: 18, padding: "12px 18px", marginBottom: 12, display: "flex", alignItems: "center", gap: 10 }}>
@@ -265,6 +368,10 @@ export default function App() {
               <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", textTransform: "uppercase", letterSpacing: 1 }}>Total Points</div>
               <div style={{ fontSize: 32, color: "#FFD700", fontWeight: "bold", lineHeight: 1 }}>{pts}</div>
             </div>
+            <button onClick={() => { localStorage.removeItem("sk_code"); setFamilyCode(""); setProfile(null); }}
+              style={{ marginLeft: "auto", background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.2)", borderRadius: 8, padding: "5px 10px", color: "rgba(255,255,255,0.5)", fontSize: 11, cursor: "pointer" }}>
+              Switch
+            </button>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 5, marginBottom: 14 }}>
             {TABS.map(t => (
@@ -273,12 +380,10 @@ export default function App() {
           </div>
           {tab === "word"    && <WordTab    w={w} onUsed={handleWordUsed} used={used} />}
           {tab === "points"  && <PointsTab  log={log} onAdd={addPoints} />}
-          {tab === "prizes"  && <PrizesTab  pts={pts} prizes={prizes} onSave={p => { setPrizes(p); lss("sk_prizes", p); }} />}
+          {tab === "prizes"  && <PrizesTab  pts={pts} prizes={prizes} onSave={handleSavePrizes} />}
           {tab === "history" && <HistoryTab history={history} />}
         </div>
       </div>
     </>
   );
 }
-
-  
