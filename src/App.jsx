@@ -39,6 +39,64 @@ function getTodayWord() {
   return WORD_BANK[day % WORD_BANK.length];
 }
 
+function playSound(type) {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    if (type === "award") {
+      // Upbeat winning fanfare
+      const notes = [523, 659, 784, 1047, 1319];
+      notes.forEach((freq, i) => {
+        const o = ctx.createOscillator();
+        const g = ctx.createGain();
+        o.connect(g); g.connect(ctx.destination);
+        o.frequency.value = freq;
+        o.type = "square";
+        g.gain.setValueAtTime(0, ctx.currentTime + i * 0.1);
+        g.gain.linearRampToValueAtTime(0.3, ctx.currentTime + i * 0.1 + 0.05);
+        g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.1 + 0.3);
+        o.start(ctx.currentTime + i * 0.1);
+        o.stop(ctx.currentTime + i * 0.1 + 0.3);
+      });
+} else if (type === "deduct") {
+  // Dramatic descending "dun dun dunnn"
+  const notes = [
+    { freq: 392, start: 0,    dur: 0.2  },
+    { freq: 349, start: 0.22, dur: 0.2  },
+    { freq: 294, start: 0.44, dur: 0.6  },
+  ];
+  notes.forEach(({ freq, start, dur }) => {
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.connect(g); g.connect(ctx.destination);
+    o.type = "triangle";
+    o.frequency.setValueAtTime(freq, ctx.currentTime + start);
+    o.frequency.linearRampToValueAtTime(freq * 0.95, ctx.currentTime + start + dur);
+    g.gain.setValueAtTime(0, ctx.currentTime + start);
+    g.gain.linearRampToValueAtTime(0.4, ctx.currentTime + start + 0.03);
+    g.gain.setValueAtTime(0.4, ctx.currentTime + start + dur - 0.1);
+    g.gain.linearRampToValueAtTime(0, ctx.currentTime + start + dur);
+    o.start(ctx.currentTime + start);
+    o.stop(ctx.currentTime + start + dur + 0.05);
+  });
+    } else if (type === "redeem") {
+      // Big winner celebration
+      const celebration = [523, 659, 784, 1047, 784, 1047, 1319];
+      celebration.forEach((freq, i) => {
+        const o = ctx.createOscillator();
+        const g = ctx.createGain();
+        o.connect(g); g.connect(ctx.destination);
+        o.frequency.value = freq;
+        o.type = i % 2 === 0 ? "square" : "sine";
+        g.gain.setValueAtTime(0, ctx.currentTime + i * 0.1);
+        g.gain.linearRampToValueAtTime(0.3, ctx.currentTime + i * 0.1 + 0.05);
+        g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.1 + 0.35);
+        o.start(ctx.currentTime + i * 0.1);
+        o.stop(ctx.currentTime + i * 0.1 + 0.35);
+      });
+    }
+  } catch(e) {}
+}
+
 function Confetti({ active }) {
   const [pieces] = useState(() => Array.from({ length: 40 }, (_, i) => ({
     left: Math.random() * 100, size: 8 + Math.random() * 8,
@@ -312,7 +370,8 @@ export default function App() {
     const newLog = [entry, ...log];
     setPts(next); setLog(newLog);
     await saveProfile({ points: next, log: newLog });
-    if (delta > 0) { setConfetti(true); setTimeout(() => setConfetti(false), 2000); }
+    if (delta > 0) { playSound("award"); setConfetti(true); setTimeout(() => setConfetti(false), 2000); }
+    else { playSound("deduct"); }
   }
 
   async function handleWordUsed() {
@@ -322,7 +381,7 @@ export default function App() {
     const newHistory = [{ word: w.word, emoji: w.emoji, used: true }, ...history.filter(x => x.word !== w.word)];
     setPts(next); setLog(newLog); setUsed(true); setHistory(newHistory);
     await saveProfile({ points: next, log: newLog, word_history: newHistory, used_date: today });
-    setConfetti(true); setTimeout(() => setConfetti(false), 2000);
+    playSound("award"); setConfetti(true); setTimeout(() => setConfetti(false), 2000);
   }
 
   async function handleSavePrizes(p) {
@@ -336,7 +395,7 @@ export default function App() {
     const newLog = [entry, ...log];
     setPts(next); setLog(newLog);
     await saveProfile({ points: next, log: newLog });
-    setConfetti(true); setTimeout(() => setConfetti(false), 2500);
+    playSound("redeem"); setConfetti(true); setTimeout(() => setConfetti(false), 2500);
   }
 
   if (!familyCode || !profile) return <LoginScreen onLogin={handleLogin} />;
