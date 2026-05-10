@@ -71,17 +71,11 @@ function LoginScreen({ onLogin }) {
     if (!c) return;
     setLoading(true); setError("");
     try {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("family_code", c)
-        .single();
+      const { data, error } = await supabase.from("profiles").select("*").eq("family_code", c).single();
       if (error && error.code === "PGRST116") {
-        const { data: newData, error: insertError } = await supabase
-          .from("profiles")
+        const { data: newData, error: insertError } = await supabase.from("profiles")
           .insert({ family_code: c, points: 0, log: [], prizes: DEFAULT_PRIZES, word_history: [], used_date: "" })
-          .select()
-          .single();
+          .select().single();
         if (insertError) throw insertError;
         onLogin(c, newData);
       } else if (error) {
@@ -101,14 +95,9 @@ function LoginScreen({ onLogin }) {
         <div style={{ fontSize: 56, marginBottom: 12 }}>⭐</div>
         <h1 style={{ color: "white", fontWeight: "bold", fontSize: 32, marginBottom: 8 }}>SuperKid</h1>
         <p style={{ color: "rgba(255,255,255,0.6)", fontSize: 14, marginBottom: 28 }}>Enter your family code to get started. Share the same code across all your devices!</p>
-        <input
-          value={code}
-          onChange={e => setCode(e.target.value.toUpperCase())}
-          onKeyDown={e => e.key === "Enter" && handleLogin()}
-          placeholder="FAMILY CODE (e.g. RYAN)"
-          maxLength={10}
-          style={{ width: "100%", background: "rgba(255,255,255,0.15)", border: "2px solid rgba(255,255,255,0.3)", borderRadius: 14, padding: "14px 16px", color: "white", fontSize: 22, textAlign: "center", outline: "none", letterSpacing: 4, fontWeight: "bold", marginBottom: 12 }}
-        />
+        <input value={code} onChange={e => setCode(e.target.value.toUpperCase())} onKeyDown={e => e.key === "Enter" && handleLogin()}
+          placeholder="FAMILY CODE (e.g. RYAN)" maxLength={10}
+          style={{ width: "100%", background: "rgba(255,255,255,0.15)", border: "2px solid rgba(255,255,255,0.3)", borderRadius: 14, padding: "14px 16px", color: "white", fontSize: 22, textAlign: "center", outline: "none", letterSpacing: 4, fontWeight: "bold", marginBottom: 12 }} />
         {error && <p style={{ color: "#FF6B6B", fontSize: 13, marginBottom: 10 }}>{error}</p>}
         <button onClick={handleLogin} disabled={loading} style={{ width: "100%", background: "linear-gradient(135deg,#FF6B6B,#FF8E53)", border: "none", borderRadius: 14, padding: "16px", color: "white", fontWeight: "bold", fontSize: 20, cursor: "pointer" }}>
           {loading ? "Loading..." : "Let's Go! 🚀"}
@@ -191,7 +180,7 @@ function PointsTab({ log, onAdd }) {
   );
 }
 
-function PrizesTab({ pts, prizes, onSave }) {
+function PrizesTab({ pts, prizes, onSave, onRedeem }) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(prizes);
   const [em, setEm] = useState("🎁");
@@ -225,8 +214,16 @@ function PrizesTab({ pts, prizes, onSave }) {
               <div style={{ fontSize: 16, fontWeight: "bold", color: ok ? "#FFD700" : "white" }}>{p.label}</div>
               <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)" }}>{p.cost} pts needed</div>
             </div>
-            {ok ? <div style={{ fontSize: 13, color: "#2ecc71", fontWeight: "bold" }}>🎉 Unlocked!</div>
-                : <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)" }}>{p.cost - pts} to go</div>}
+            {ok ? (
+              <button onClick={() => onRedeem(p)} style={{
+                background: "linear-gradient(135deg,#FFD700,#FFA500)",
+                border: "none", borderRadius: 10, padding: "8px 14px",
+                color: "white", fontWeight: "bold", fontSize: 13,
+                cursor: "pointer", boxShadow: "0 2px 8px rgba(255,165,0,0.4)",
+              }}>🎁 Redeem</button>
+            ) : (
+              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)" }}>{p.cost - pts} to go</div>
+            )}
             {editing && <button onClick={() => setDraft(d => d.filter(x => x.id !== p.id))} style={{ background: "rgba(231,76,60,0.2)", border: "none", borderRadius: 7, padding: "5px 8px", color: "#e74c3c", cursor: "pointer" }}>✕</button>}
           </div>
         );
@@ -285,18 +282,13 @@ export default function App() {
   const [tab, setTab] = useState("word");
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
-    if (familyCode) loadProfile(familyCode);
-  }, []);
+  useEffect(() => { if (familyCode) loadProfile(familyCode); }, []);
 
   async function loadProfile(code) {
-    const { data, error } = await supabase.from("profiles").select("*").eq("family_code", code).single();
+    const { data } = await supabase.from("profiles").select("*").eq("family_code", code).single();
     if (data) {
-      setProfile(data);
-      setPts(data.points || 0);
-      setLog(data.log || []);
-      setHistory(data.word_history || []);
-      setPrizes(data.prizes || DEFAULT_PRIZES);
+      setProfile(data); setPts(data.points || 0); setLog(data.log || []);
+      setHistory(data.word_history || []); setPrizes(data.prizes || DEFAULT_PRIZES);
       setUsed(data.used_date === today);
     }
   }
@@ -309,13 +301,9 @@ export default function App() {
 
   function handleLogin(code, data) {
     localStorage.setItem("sk_code", code);
-    setFamilyCode(code);
-    setProfile(data);
-    setPts(data.points || 0);
-    setLog(data.log || []);
-    setHistory(data.word_history || []);
-    setPrizes(data.prizes || DEFAULT_PRIZES);
-    setUsed(data.used_date === today);
+    setFamilyCode(code); setProfile(data); setPts(data.points || 0);
+    setLog(data.log || []); setHistory(data.word_history || []);
+    setPrizes(data.prizes || DEFAULT_PRIZES); setUsed(data.used_date === today);
   }
 
   async function addPoints(delta, reason) {
@@ -340,6 +328,15 @@ export default function App() {
   async function handleSavePrizes(p) {
     setPrizes(p);
     await saveProfile({ prizes: p });
+  }
+
+  async function handleRedeem(prize) {
+    const next = Math.max(0, pts - prize.cost);
+    const entry = { delta: -prize.cost, reason: `🎁 Redeemed: ${prize.label}`, d: new Date().toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) };
+    const newLog = [entry, ...log];
+    setPts(next); setLog(newLog);
+    await saveProfile({ points: next, log: newLog });
+    setConfetti(true); setTimeout(() => setConfetti(false), 2500);
   }
 
   if (!familyCode || !profile) return <LoginScreen onLogin={handleLogin} />;
@@ -380,7 +377,7 @@ export default function App() {
           </div>
           {tab === "word"    && <WordTab    w={w} onUsed={handleWordUsed} used={used} />}
           {tab === "points"  && <PointsTab  log={log} onAdd={addPoints} />}
-          {tab === "prizes"  && <PrizesTab  pts={pts} prizes={prizes} onSave={handleSavePrizes} />}
+          {tab === "prizes"  && <PrizesTab  pts={pts} prizes={prizes} onSave={handleSavePrizes} onRedeem={handleRedeem} />}
           {tab === "history" && <HistoryTab history={history} />}
         </div>
       </div>
