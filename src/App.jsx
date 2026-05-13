@@ -279,9 +279,26 @@ function WordTab({ w, onUsed, used, kidName }) {
 }
 
 // ─── Points Tab ───────────────────────────────────────────────────────────────
-function PointsTab({ log, onAdd, soundEnabled, kidName }) {
+function PointsTab({ log, onAdd, onEditLog, soundEnabled, kidName }) {
   const [reason, setReason] = useState("");
   const [amt, setAmt] = useState(1);
+  const [editingIdx, setEditingIdx] = useState(null);
+  const [editReason, setEditReason] = useState("");
+  const [editAmt, setEditAmt] = useState(1);
+
+  function startEdit(i) {
+    setEditingIdx(i);
+    setEditReason(log[i].reason);
+    setEditAmt(Math.abs(log[i].delta));
+  }
+
+  function saveEdit() {
+    const original = log[editingIdx];
+    const newDelta = original.delta > 0 ? Math.abs(editAmt) : -Math.abs(editAmt);
+    onEditLog(editingIdx, { ...original, reason: editReason, delta: newDelta });
+    setEditingIdx(null);
+  }
+
   return (
     <div>
       <div style={{ background: "rgba(255,255,255,0.1)", borderRadius: 20, padding: 18, border: "2px solid rgba(255,255,255,0.18)", marginBottom: 13 }}>
@@ -308,12 +325,34 @@ function PointsTab({ log, onAdd, soundEnabled, kidName }) {
         {log.length === 0
           ? <div style={{ color: "rgba(255,255,255,0.35)", fontSize: 13, textAlign: "center", padding: "10px 0" }}>No activity yet!</div>
           : log.slice(0, 20).map((e, i) => (
-            <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: e.delta > 0 ? "rgba(46,204,113,0.1)" : "rgba(231,76,60,0.1)", borderRadius: 10, padding: "9px 12px", marginBottom: 7, borderLeft: `3px solid ${e.delta > 0 ? "#2ecc71" : "#e74c3c"}` }}>
-              <div>
-                <div style={{ fontSize: 13, fontWeight: 700, color: "white" }}>{e.reason}</div>
-                <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)" }}>{e.d}</div>
-              </div>
-              <div style={{ fontSize: 18, fontWeight: "bold", color: e.delta > 0 ? "#2ecc71" : "#e74c3c" }}>{e.delta > 0 ? "+" : ""}{e.delta}</div>
+            <div key={i} style={{ background: e.delta > 0 ? "rgba(46,204,113,0.1)" : "rgba(231,76,60,0.1)", borderRadius: 10, padding: "9px 12px", marginBottom: 7, borderLeft: `3px solid ${e.delta > 0 ? "#2ecc71" : "#e74c3c"}` }}>
+              {editingIdx === i ? (
+                <div>
+                  <input value={editReason} onChange={e => setEditReason(e.target.value)}
+                    style={{ width: "100%", background: "rgba(255,255,255,0.1)", border: "2px solid rgba(255,255,255,0.2)", borderRadius: 8, padding: "7px 10px", color: "white", fontSize: 13, outline: "none", marginBottom: 8 }} />
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <div style={{ display: "flex", alignItems: "center", background: "rgba(255,255,255,0.1)", borderRadius: 8, overflow: "hidden" }}>
+                      <button onClick={() => setEditAmt(a => Math.max(1, a - 1))} style={{ background: "none", border: "none", color: "white", fontSize: 18, padding: "4px 10px", cursor: "pointer" }}>−</button>
+                      <span style={{ fontSize: 16, color: "#FFD700", fontWeight: "bold", padding: "0 8px" }}>{editAmt}</span>
+                      <button onClick={() => setEditAmt(a => a + 1)} style={{ background: "none", border: "none", color: "white", fontSize: 18, padding: "4px 10px", cursor: "pointer" }}>+</button>
+                    </div>
+                    <button onClick={saveEdit} style={{ background: "linear-gradient(135deg,#2ecc71,#27ae60)", border: "none", borderRadius: 8, padding: "6px 14px", color: "white", fontWeight: "bold", fontSize: 13, cursor: "pointer" }}>Save</button>
+                    <button onClick={() => setEditingIdx(null)} style={{ background: "rgba(255,255,255,0.1)", border: "none", borderRadius: 8, padding: "6px 14px", color: "white", fontSize: 13, cursor: "pointer" }}>Cancel</button>
+                    <button onClick={() => { onEditLog(i, null); setEditingIdx(null); }} style={{ background: "rgba(231,76,60,0.2)", border: "none", borderRadius: 8, padding: "6px 10px", color: "#e74c3c", fontSize: 13, cursor: "pointer" }}>🗑️</button>
+                  </div>
+                </div>
+              ) : (
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: "white" }}>{e.reason}</div>
+                    <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)" }}>{e.d}</div>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <div style={{ fontSize: 18, fontWeight: "bold", color: e.delta > 0 ? "#2ecc71" : "#e74c3c" }}>{e.delta > 0 ? "+" : ""}{e.delta}</div>
+                    <button onClick={() => startEdit(i)} style={{ background: "rgba(255,255,255,0.1)", border: "none", borderRadius: 7, padding: "4px 8px", color: "rgba(255,255,255,0.6)", fontSize: 12, cursor: "pointer" }}>✏️</button>
+                  </div>
+                </div>
+              )}
             </div>
           ))
         }
@@ -595,7 +634,24 @@ export default function App() {
     setPrizes(p);
     await updateActiveKid({ prizes: p });
   }
-
+async function handleEditLog(idx, updated) {
+  let newLog;
+  let newPts = pts;
+  if (updated === null) {
+    // Delete entry
+    const removed = log[idx];
+    newPts = Math.max(0, pts - removed.delta);
+    newLog = log.filter((_, i) => i !== idx);
+  } else {
+    // Edit entry
+    const oldDelta = log[idx].delta;
+    const newDelta = updated.delta;
+    newPts = Math.max(0, pts - oldDelta + newDelta);
+    newLog = log.map((e, i) => i === idx ? updated : e);
+  }
+  setPts(newPts); setLog(newLog);
+  await updateActiveKid({ points: newPts, log: newLog });
+}
   async function handleRedeem(prize) {
     const next = Math.max(0, pts - prize.cost);
     const entry = { delta: -prize.cost, reason: `🎁 Redeemed: ${prize.label}`, d: new Date().toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) };
@@ -664,7 +720,7 @@ export default function App() {
         {/* Content */}
         <div style={{ maxWidth: 460, margin: "0 auto", padding: "0 13px" }}>
           {tab === "word"     && <WordTab     w={w} onUsed={handleWordUsed} used={used} kidName={activeKid?.name || "He"} />}
-          {tab === "points"   && <PointsTab   log={log} onAdd={addPoints} soundEnabled={soundEnabled} kidName={activeKid?.name || "Kid"} />}
+          {tab === "points" && <PointsTab log={log} onAdd={addPoints} onEditLog={handleEditLog} soundEnabled={soundEnabled} kidName={activeKid?.name || "Kid"} />}
           {tab === "prizes"   && <PrizesTab   pts={pts} prizes={prizes} onSave={handleSavePrizes} onRedeem={handleRedeem} />}
           {tab === "history"  && <HistoryTab  history={history} />}
           {tab === "settings" && <SettingsTab familyCode={familyCode} soundEnabled={soundEnabled} onToggleSound={handleToggleSound} kids={kids} activeKidId={activeKidId} onAddKid={() => setShowAddKid(true)} onEditKid={k => setEditingKid(k)} onSwitchKid={handleSwitchKid} onSignOut={handleSignOut} />}
