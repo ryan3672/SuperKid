@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "./supabase";
 
-// ─── Tiered Word Banks ────────────────────────────────────────────────────────
 const WORDS = {
   easy: [
     { word: "Happy", emoji: "😊", definition: "Feeling really good and full of joy!", visual: "Picture a puppy wagging its tail so fast it wiggles its whole body!", example: "She felt happy when she got a big hug from her mom." },
@@ -232,21 +231,15 @@ const DEFAULT_PRIZES = [
 ];
 
 const CONFETTI_COLORS = ["#FFD700","#FF6B6B","#4ECDC4","#45B7D1","#96CEB4","#FFEAA7","#DDA0DD"];
-
-const HERO_STATES = ["🦸","🦸","🦸","🦸","🦸","😵","💀"];
 const HERO_LABELS = ["Full power!","Cape lost!","Mask gone!","Belt off!","One boot!","Barely standing!","Game over!"];
 
 function getTodayContent(difficulty = "justRight") {
   const now = new Date();
   const day = Math.floor((now - new Date(now.getFullYear(), 0, 0)) / 86400000);
-  const wordBank = WORDS[difficulty] || WORDS.justRight;
-  const jokeBank = JOKES[difficulty] || JOKES.justRight;
-  const factBank = FACTS[difficulty] || FACTS.justRight;
-  return {
-    word: wordBank[day % wordBank.length],
-    joke: jokeBank[day % jokeBank.length],
-    fact: factBank[day % factBank.length],
-  };
+  const wb = WORDS[difficulty] || WORDS.justRight;
+  const jb = JOKES[difficulty] || JOKES.justRight;
+  const fb = FACTS[difficulty] || FACTS.justRight;
+  return { word: wb[day % wb.length], joke: jb[day % jb.length], fact: fb[day % fb.length] };
 }
 
 function playSound(type) {
@@ -288,15 +281,13 @@ function playSound(type) {
 
 function Confetti({ active }) {
   const [pieces] = useState(() => Array.from({length:40},(_,i) => ({
-    left:Math.random()*100,size:8+Math.random()*8,color:CONFETTI_COLORS[i%7],
-    round:Math.random()>.5,dur:1.5+Math.random()*2,delay:Math.random()*.8,rot:Math.random()*360,
+    left:Math.random()*100, size:8+Math.random()*8, color:CONFETTI_COLORS[i%7],
+    round:Math.random()>.5, dur:1.5+Math.random()*2, delay:Math.random()*.8, rot:Math.random()*360,
   })));
   if (!active) return null;
   return (
     <div style={{position:"fixed",inset:0,pointerEvents:"none",zIndex:1000}}>
-      {pieces.map((p,i) => (
-        <div key={i} style={{position:"absolute",left:`${p.left}%`,top:"-10px",width:p.size,height:p.size,backgroundColor:p.color,borderRadius:p.round?"50%":"2px",animation:`fall ${p.dur}s ease-in forwards`,animationDelay:`${p.delay}s`,transform:`rotate(${p.rot}deg)`}} />
-      ))}
+      {pieces.map((p,i) => <div key={i} style={{position:"absolute",left:`${p.left}%`,top:"-10px",width:p.size,height:p.size,backgroundColor:p.color,borderRadius:p.round?"50%":"2px",animation:`fall ${p.dur}s ease-in forwards`,animationDelay:`${p.delay}s`,transform:`rotate(${p.rot}deg)`}} />)}
     </div>
   );
 }
@@ -338,16 +329,16 @@ function LoginScreen({ onLogin }) {
   const [error,setError]=useState("");
   async function handleLogin() {
     const c=code.trim().toUpperCase();
-    if (!c) return;
+    if(!c)return;
     setLoading(true);setError("");
     try {
       const {data,error}=await supabase.from("profiles").select("*").eq("family_code",c).single();
-      if (error && error.code==="PGRST116") {
-        const {data:newData,error:insertError}=await supabase.from("profiles").insert({family_code:c,points:0,log:[],prizes:DEFAULT_PRIZES,word_history:[],used_date:"",kids:[]}).select().single();
-        if (insertError) throw insertError;
+      if(error&&error.code==="PGRST116"){
+        const {data:newData,error:ie}=await supabase.from("profiles").insert({family_code:c,points:0,log:[],prizes:DEFAULT_PRIZES,word_history:[],used_date:"",kids:[]}).select().single();
+        if(ie)throw ie;
         onLogin(c,newData);
-      } else if (error) { throw error; } else { onLogin(c,data); }
-    } catch(e) { setError("Something went wrong. Try again!"); }
+      } else if(error){throw error;}else{onLogin(c,data);}
+    } catch(e){setError("Something went wrong. Try again!");}
     setLoading(false);
   }
   return (
@@ -358,7 +349,7 @@ function LoginScreen({ onLogin }) {
         <p style={{color:"rgba(255,255,255,0.6)",fontSize:14,marginBottom:28}}>Enter your family code to get started!</p>
         <input value={code} onChange={e=>setCode(e.target.value.toUpperCase())} onKeyDown={e=>e.key==="Enter"&&handleLogin()} placeholder="FAMILY CODE" maxLength={10}
           style={{width:"100%",background:"rgba(255,255,255,0.15)",border:"2px solid rgba(255,255,255,0.3)",borderRadius:14,padding:"14px 16px",color:"white",fontSize:22,textAlign:"center",outline:"none",letterSpacing:4,fontWeight:"bold",marginBottom:12}} />
-        {error && <p style={{color:"#FF6B6B",fontSize:13,marginBottom:10}}>{error}</p>}
+        {error&&<p style={{color:"#FF6B6B",fontSize:13,marginBottom:10}}>{error}</p>}
         <button onClick={handleLogin} disabled={loading} style={{width:"100%",background:"linear-gradient(135deg,#FF6B6B,#FF8E53)",border:"none",borderRadius:14,padding:"16px",color:"white",fontWeight:"bold",fontSize:20,cursor:"pointer"}}>
           {loading?"Loading...":"Let's Go! 🚀"}
         </button>
@@ -373,7 +364,7 @@ function AddKidScreen({ onSave, onCancel, existing }) {
   const [age,setAge]=useState(existing?.age||"");
   const [avatarId,setAvatarId]=useState(existing?.avatarId||"lion");
   const [difficulty,setDifficulty]=useState(existing?.difficulty||"justRight");
-  function handleSave() { if (!name.trim()) return; onSave({name:name.trim(),age:parseInt(age)||5,avatarId,difficulty}); }
+  function handleSave(){if(!name.trim())return;onSave({name:name.trim(),age:parseInt(age)||5,avatarId,difficulty});}
   const diffOptions=[{id:"easy",label:"🐣 Easy",desc:"Ages 3-5"},{id:"justRight",label:"⭐ Just Right",desc:"Age appropriate"},{id:"challenge",label:"🚀 Challenge Me!",desc:"Advanced"}];
   return (
     <div style={{minHeight:"100vh",background:"linear-gradient(160deg,#1a1a6e,#2d1b69 40%,#11998e 75%,#38ef7d)",padding:"24px 16px 40px"}}>
@@ -395,7 +386,7 @@ function AddKidScreen({ onSave, onCancel, existing }) {
               <button key={d.id} onClick={()=>setDifficulty(d.id)} style={{background:difficulty===d.id?"rgba(255,215,0,0.2)":"rgba(255,255,255,0.08)",border:difficulty===d.id?"2px solid rgba(255,215,0,0.5)":"2px solid rgba(255,255,255,0.1)",borderRadius:12,padding:"12px 16px",cursor:"pointer",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
                 <span style={{color:"white",fontWeight:"bold",fontSize:15}}>{d.label}</span>
                 <span style={{color:"rgba(255,255,255,0.5)",fontSize:12}}>{d.desc}</span>
-                {difficulty===d.id && <span style={{color:"#FFD700",fontSize:14}}>✓</span>}
+                {difficulty===d.id&&<span style={{color:"#FFD700",fontSize:14}}>✓</span>}
               </button>
             ))}
           </div>
@@ -412,176 +403,74 @@ function AddKidScreen({ onSave, onCancel, existing }) {
   );
 }
 
-// ─── Hangman Game ─────────────────────────────────────────────────────────────
-function HangmanGame({ word, definition, onWin, onLose, soundEnabled }) {
+function HangmanGame({ word, definition, onWin, onLose }) {
   const letters = word.toUpperCase().split("");
-  const [guessed, setGuessed] = useState(new Set());
-  const [wrong, setWrong] = useState(0);
-  const [gameOver, setGameOver] = useState(false);
-  const [won, setWon] = useState(false);
-  const [showHint, setShowHint] = useState(false);
-  const maxWrong = 6;
+  const [guessed,setGuessed]=useState(new Set());
+  const [wrong,setWrong]=useState(0);
+  const [gameOver,setGameOver]=useState(false);
+  const [won,setWon]=useState(false);
+  const [showHint,setShowHint]=useState(false);
+  const maxWrong=6;
+  const solved=letters.every(l=>l===" "||guessed.has(l));
 
-  const solved = letters.every(l => l === " " || guessed.has(l));
+  useEffect(()=>{if(solved&&!gameOver){setWon(true);setGameOver(true);onWin();}},[guessed]);
 
-  useEffect(() => {
-    if (solved && !gameOver) { setWon(true); setGameOver(true); onWin(); }
-  }, [guessed]);
-
-  function guess(letter) {
-    if (gameOver || guessed.has(letter)) return;
-    const newGuessed = new Set(guessed);
-    newGuessed.add(letter);
-    setGuessed(newGuessed);
-    if (!letters.includes(letter)) {
-      const newWrong = wrong + 1;
-      setWrong(newWrong);
-      if (newWrong >= maxWrong) { setGameOver(true); onLose(); }
-    }
+  function guess(letter){
+    if(gameOver||guessed.has(letter))return;
+    const ng=new Set(guessed);ng.add(letter);setGuessed(ng);
+    if(!letters.includes(letter)){const nw=wrong+1;setWrong(nw);if(nw>=maxWrong){setGameOver(true);onLose();}}
   }
 
-  const heroEmojis = ["🦸","🦸","🦸","🦸","😰","😵","💀"];
-  const heroColors = ["#FFD700","#FFD700","#FFA500","#FF6B35","#FF4444","#CC0000","#880000"];
+  const heroEmojis=["🦸","🦸","🦸","🦸","😰","😵","💀"];
+  const heroColors=["#FFD700","#FFD700","#FFA500","#FF6B35","#FF4444","#CC0000","#880000"];
 
   return (
     <div style={{background:"rgba(255,255,255,0.11)",borderRadius:22,padding:22,border:"2px solid rgba(255,255,255,0.2)"}}>
-      {/* Header */}
       <div style={{textAlign:"center",marginBottom:16}}>
         <div style={{fontSize:10,color:"rgba(255,255,255,0.45)",textTransform:"uppercase",letterSpacing:2,marginBottom:4}}>Daily Hangman</div>
-        <div style={{fontSize:56,transition:"all 0.3s"}}>{heroEmojis[wrong]}</div>
+        <div style={{fontSize:56}}>{heroEmojis[wrong]}</div>
         <div style={{color:heroColors[wrong],fontSize:13,fontWeight:"bold",marginTop:4}}>{HERO_LABELS[wrong]}</div>
-        {/* Wrong counter */}
         <div style={{display:"flex",justifyContent:"center",gap:6,marginTop:8}}>
-          {Array.from({length:maxWrong}).map((_,i) => (
-            <div key={i} style={{width:12,height:12,borderRadius:"50%",background:i<wrong?"#e74c3c":"rgba(255,255,255,0.2)",transition:"background 0.3s"}} />
-          ))}
+          {Array.from({length:maxWrong}).map((_,i)=><div key={i} style={{width:12,height:12,borderRadius:"50%",background:i<wrong?"#e74c3c":"rgba(255,255,255,0.2)",transition:"background 0.3s"}}/>)}
         </div>
       </div>
-
-      {/* Word display */}
       <div style={{display:"flex",justifyContent:"center",gap:8,marginBottom:20,flexWrap:"wrap"}}>
-        {letters.map((l,i) => (
+        {letters.map((l,i)=>(
           <div key={i} style={{minWidth:28,textAlign:"center"}}>
-            {l === " " ? (
-              <div style={{width:28,height:2}} />
-            ) : (
-              <>
-                <div style={{fontSize:24,fontWeight:"bold",color:guessed.has(l)?"#FFD700":"transparent",textShadow:guessed.has(l)?"0 0 8px rgba(255,215,0,0.4)":"none",minHeight:32,transition:"all 0.3s"}}>{l}</div>
-                <div style={{height:3,background:guessed.has(l)?"#FFD700":"rgba(255,255,255,0.4)",borderRadius:2,marginTop:2,transition:"background 0.3s"}} />
-              </>
-            )}
+            {l===" "?<div style={{width:28,height:2}}/>:<>
+              <div style={{fontSize:24,fontWeight:"bold",color:guessed.has(l)?"#FFD700":"transparent",minHeight:32,transition:"all 0.3s"}}>{l}</div>
+              <div style={{height:3,background:guessed.has(l)?"#FFD700":"rgba(255,255,255,0.4)",borderRadius:2,marginTop:2,transition:"background 0.3s"}}/>
+            </>}
           </div>
         ))}
       </div>
-
-      {/* Hint */}
-      {!gameOver && (
+      {!gameOver&&(
         <div style={{marginBottom:14}}>
-          {!showHint ? (
-            <button onClick={()=>setShowHint(true)} style={{width:"100%",background:"rgba(255,255,255,0.08)",border:"2px solid rgba(255,255,255,0.15)",borderRadius:11,padding:"9px",color:"rgba(255,255,255,0.6)",fontSize:13,cursor:"pointer"}}>
-              💡 Show Hint (-1 pt)
-            </button>
-          ) : (
-            <div style={{background:"rgba(78,205,196,0.1)",borderRadius:11,padding:"10px 14px",border:"1px solid rgba(78,205,196,0.2)",textAlign:"center"}}>
-              <span style={{color:"#4ECDC4",fontSize:13}}>{definition}</span>
-            </div>
-          )}
+          {!showHint
+            ?<button onClick={()=>setShowHint(true)} style={{width:"100%",background:"rgba(255,255,255,0.08)",border:"2px solid rgba(255,255,255,0.15)",borderRadius:11,padding:"9px",color:"rgba(255,255,255,0.6)",fontSize:13,cursor:"pointer"}}>💡 Show Hint (-1 pt)</button>
+            :<div style={{background:"rgba(78,205,196,0.1)",borderRadius:11,padding:"10px 14px",border:"1px solid rgba(78,205,196,0.2)",textAlign:"center"}}><span style={{color:"#4ECDC4",fontSize:13}}>{definition}</span></div>
+          }
         </div>
       )}
-
-      {/* Game over states */}
-      {gameOver && (
+      {gameOver&&(
         <div style={{background:won?"linear-gradient(135deg,#96CEB4,#4ECDC4)":"linear-gradient(135deg,#e74c3c,#c0392b)",borderRadius:14,padding:"16px",textAlign:"center",marginBottom:14}}>
-          {won ? (
-            <div>
-              <div style={{fontSize:32,marginBottom:4}}>🎉</div>
-              <div style={{color:"white",fontWeight:"bold",fontSize:18}}>Amazing! You got it! +3 pts!</div>
-            </div>
-          ) : (
-            <div>
-              <div style={{fontSize:32,marginBottom:4}}>💀</div>
-              <div style={{color:"white",fontWeight:"bold",fontSize:16}}>The word was: <span style={{color:"#FFD700"}}>{word.toUpperCase()}</span></div>
-              <div style={{color:"rgba(255,255,255,0.8)",fontSize:13,marginTop:4}}>{definition}</div>
-            </div>
-          )}
+          {won?<div><div style={{fontSize:32,marginBottom:4}}>🎉</div><div style={{color:"white",fontWeight:"bold",fontSize:18}}>Amazing! You got it! +3 pts!</div></div>
+              :<div><div style={{fontSize:32,marginBottom:4}}>💀</div><div style={{color:"white",fontWeight:"bold",fontSize:16}}>The word was: <span style={{color:"#FFD700"}}>{word.toUpperCase()}</span></div><div style={{color:"rgba(255,255,255,0.8)",fontSize:13,marginTop:4}}>{definition}</div></div>}
         </div>
       )}
-
-      {/* Keyboard */}
-      {!gameOver && (
+      {!gameOver&&(
         <div>
-          {"ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("").reduce((rows,l,i) => {
-            const row = Math.floor(i/9);
-            if (!rows[row]) rows[row]=[];
-            rows[row].push(l);
-            return rows;
-          },[]).map((row,ri) => (
+          {"ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("").reduce((rows,l,i)=>{const row=Math.floor(i/9);if(!rows[row])rows[row]=[];rows[row].push(l);return rows;},[]).map((row,ri)=>(
             <div key={ri} style={{display:"flex",justifyContent:"center",gap:5,marginBottom:5}}>
-              {row.map(l => {
-                const isGuessed = guessed.has(l);
-                const isCorrect = isGuessed && letters.includes(l);
-                const isWrong = isGuessed && !letters.includes(l);
-                return (
-                  <button key={l} onClick={()=>guess(l)} disabled={isGuessed}
-                    style={{width:32,height:36,borderRadius:8,border:"none",cursor:isGuessed?"default":"pointer",fontWeight:"bold",fontSize:14,transition:"all 0.2s",
-                      background:isCorrect?"linear-gradient(135deg,#2ecc71,#27ae60)":isWrong?"rgba(231,76,60,0.3)":"rgba(255,255,255,0.15)",
-                      color:isCorrect?"white":isWrong?"rgba(255,255,255,0.3)":"white",
-                      opacity:isGuessed?0.6:1,
-                    }}>
-                    {l}
-                  </button>
-                );
+              {row.map(l=>{
+                const isGuessed=guessed.has(l);
+                const isCorrect=isGuessed&&letters.includes(l);
+                const isWrong=isGuessed&&!letters.includes(l);
+                return <button key={l} onClick={()=>guess(l)} disabled={isGuessed} style={{width:32,height:36,borderRadius:8,border:"none",cursor:isGuessed?"default":"pointer",fontWeight:"bold",fontSize:14,transition:"all 0.2s",background:isCorrect?"linear-gradient(135deg,#2ecc71,#27ae60)":isWrong?"rgba(231,76,60,0.3)":"rgba(255,255,255,0.15)",color:isCorrect?"white":isWrong?"rgba(255,255,255,0.3)":"white",opacity:isGuessed?0.6:1}}>{l}</button>;
               })}
             </div>
           ))}
         </div>
-      )}
-    </div>
-  );
-}
-
-// ─── Puzzle Tab ───────────────────────────────────────────────────────────────
-function PuzzleTab({ word, onEarn, puzzleDone, kidName, onSkip }) {
-  const [playing, setPlaying] = useState(false);
-  const [result, setResult] = useState(null);
-
-  function handleWin() { setResult("won"); onEarn("hangman_win"); }
-  function handleLose() { setResult("lost"); onEarn("hangman_lose"); }
-
-  if (puzzleDone) {
-    return (
-      <div style={{ background: "rgba(255,255,255,0.11)", borderRadius: 22, padding: 28, border: "2px solid rgba(255,255,255,0.2)", textAlign: "center" }}>
-        <div style={{ fontSize: 56, marginBottom: 12 }}>{result === "won" ? "🏆" : "💪"}</div>
-        <div style={{ color: "#FFD700", fontWeight: "bold", fontSize: 22, marginBottom: 8 }}>
-          {result === "won" ? "Puzzle Complete!" : "Good try!"}
-        </div>
-        <div style={{ color: "rgba(255,255,255,0.6)", fontSize: 14 }}>Come back tomorrow for a new word!</div>
-      </div>
-    );
-  }
-
-  return (
-    <div>
-      {!playing ? (
-        <div style={{ background: "rgba(255,255,255,0.11)", borderRadius: 22, padding: 28, border: "2px solid rgba(255,255,255,0.2)", textAlign: "center" }}>
-          <div style={{ fontSize: 64, marginBottom: 12 }}>🎮</div>
-          <div style={{ color: "white", fontWeight: "bold", fontSize: 22, marginBottom: 8 }}>Daily Hangman</div>
-          <div style={{ color: "rgba(255,255,255,0.6)", fontSize: 14, marginBottom: 8 }}>
-            Can {kidName} guess today's word?
-          </div>
-          <div style={{ background: "rgba(255,215,0,0.1)", borderRadius: 14, padding: "12px 16px", marginBottom: 20, border: "1px solid rgba(255,215,0,0.2)" }}>
-            <div style={{ color: "#FFD700", fontWeight: "bold", fontSize: 16 }}>🏆 Win = +3 pts</div>
-            <div style={{ color: "rgba(255,255,255,0.5)", fontSize: 12, marginTop: 4 }}>6 wrong guesses allowed • Use hint for a clue</div>
-          </div>
-          <button onClick={() => setPlaying(true)} style={{ width: "100%", background: "linear-gradient(135deg,#FF6B6B,#FF8E53)", border: "none", borderRadius: 14, padding: "16px", color: "white", fontWeight: "bold", fontSize: 20, cursor: "pointer", marginBottom: 12 }}>
-            🎯 Play Hangman!
-          </button>
-          <button onClick={onSkip} style={{ width: "100%", background: "transparent", border: "none", color: "rgba(255,255,255,0.35)", fontSize: 13, cursor: "pointer", padding: "8px" }}>
-            Skip — Go to Word of the Day →
-          </button>
-        </div>
-      ) : (
-        <HangmanGame word={word.word} definition={word.definition} onWin={handleWin} onLose={handleLose} />
       )}
     </div>
   );
@@ -597,21 +486,99 @@ function WordTab({ word, onUsed, used, kidName }) {
           <div style={{fontSize:32,color:"#FFD700",fontWeight:"bold",lineHeight:1}}>{word.word}</div>
         </div>
       </div>
-      {[["Means","#4ECDC4",word.definition,false],["🌟 Picture","#96CEB4",word.visual,false],["💬 Example","#FFEAA7",`"${word.example}"`,true]].map(([lbl,col,txt,ital]) => (
+      {[["Means","#4ECDC4",word.definition,false],["🌟 Picture","#96CEB4",word.visual,false],["💬 Example","#FFEAA7",`"${word.example}"`,true]].map(([lbl,col,txt,ital])=>(
         <div key={lbl} style={{background:"rgba(255,255,255,0.09)",borderRadius:12,padding:"11px 13px",marginBottom:9}}>
-          <p style={{color:"white",fontSize:14,margin:0,lineHeight:1.55,fontStyle:ital?"italic":"normal"}}>
-            <strong style={{color:col,fontStyle:"normal"}}>{lbl}: </strong>{txt}
-          </p>
+          <p style={{color:"white",fontSize:14,margin:0,lineHeight:1.55,fontStyle:ital?"italic":"normal"}}><strong style={{color:col,fontStyle:"normal"}}>{lbl}: </strong>{txt}</p>
         </div>
       ))}
       {used
-        ? <div style={{background:"linear-gradient(135deg,#96CEB4,#4ECDC4)",borderRadius:13,padding:"13px 18px",textAlign:"center",marginTop:6}}>
-            <span style={{color:"white",fontWeight:"bold",fontSize:17}}>🎉 {kidName} used it today! +2 pts!</span>
-          </div>
-        : <button onClick={onUsed} style={{width:"100%",background:"linear-gradient(135deg,#FF6B6B,#FF8E53)",border:"none",borderRadius:13,padding:"15px 20px",color:"white",fontWeight:"bold",fontSize:18,cursor:"pointer",marginTop:6}}>
-            🗣️ {kidName} used it in a sentence! +2 pts
-          </button>
+        ?<div style={{background:"linear-gradient(135deg,#96CEB4,#4ECDC4)",borderRadius:13,padding:"13px 18px",textAlign:"center",marginTop:6}}><span style={{color:"white",fontWeight:"bold",fontSize:17}}>🎉 {kidName} used it today! +2 pts!</span></div>
+        :<button onClick={onUsed} style={{width:"100%",background:"linear-gradient(135deg,#FF6B6B,#FF8E53)",border:"none",borderRadius:13,padding:"15px 20px",color:"white",fontWeight:"bold",fontSize:18,cursor:"pointer",marginTop:6}}>🗣️ {kidName} used it in a sentence! +2 pts</button>
       }
+    </div>
+  );
+}
+
+function ExtrasTab({ joke, fact, word, onEarn, jokeShared, factShared, puzzleDone, kidName, puzzleEnabled }) {
+  const [showPunchline,setShowPunchline]=useState(false);
+  const [playingHangman,setPlayingHangman]=useState(false);
+  const [hangmanResult,setHangmanResult]=useState(null);
+
+  function handleWin(){setHangmanResult("won");onEarn("hangman_win");}
+  function handleLose(){setHangmanResult("lost");onEarn("hangman_lose");}
+
+  return (
+    <div>
+      {/* Joke */}
+      <div style={{background:"rgba(255,255,255,0.11)",borderRadius:22,padding:22,border:"2px solid rgba(255,255,255,0.2)",marginBottom:16}}>
+        <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:14}}>
+          <div style={{fontSize:36,background:"rgba(255,220,0,0.15)",borderRadius:"50%",width:56,height:56,display:"flex",alignItems:"center",justifyContent:"center"}}>😄</div>
+          <div>
+            <div style={{fontSize:10,color:"rgba(255,255,255,0.45)",textTransform:"uppercase",letterSpacing:2}}>Joke of the Day</div>
+            <div style={{fontSize:18,color:"white",fontWeight:"bold"}}>Make someone laugh!</div>
+          </div>
+        </div>
+        <div style={{background:"rgba(255,255,255,0.09)",borderRadius:14,padding:"14px 16px",marginBottom:12}}>
+          <p style={{color:"white",fontSize:16,margin:0,lineHeight:1.5,fontWeight:"600"}}>{joke.setup}</p>
+        </div>
+        {!showPunchline
+          ?<button onClick={()=>setShowPunchline(true)} style={{width:"100%",background:"linear-gradient(135deg,#FFD700,#FFA500)",border:"none",borderRadius:13,padding:"13px 20px",color:"white",fontWeight:"bold",fontSize:16,cursor:"pointer"}}>🥁 Tap for the Punchline!</button>
+          :<div>
+            <div style={{background:"rgba(255,215,0,0.15)",borderRadius:14,padding:"14px 16px",marginBottom:12,border:"2px solid rgba(255,215,0,0.3)"}}><p style={{color:"#FFD700",fontSize:16,margin:0,fontWeight:"bold",textAlign:"center"}}>{joke.punchline}</p></div>
+            {jokeShared
+              ?<div style={{background:"linear-gradient(135deg,#96CEB4,#4ECDC4)",borderRadius:13,padding:"12px 18px",textAlign:"center"}}><span style={{color:"white",fontWeight:"bold",fontSize:15}}>🎉 {kidName} told the joke! +1 pt!</span></div>
+              :<button onClick={()=>onEarn("joke")} style={{width:"100%",background:"linear-gradient(135deg,#FF6B6B,#FF8E53)",border:"none",borderRadius:13,padding:"13px 20px",color:"white",fontWeight:"bold",fontSize:16,cursor:"pointer"}}>🗣️ {kidName} told someone the joke! +1 pt</button>
+            }
+          </div>
+        }
+      </div>
+
+      {/* Fun Fact */}
+      <div style={{background:"rgba(255,255,255,0.11)",borderRadius:22,padding:22,border:"2px solid rgba(255,255,255,0.2)",marginBottom:16}}>
+        <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:14}}>
+          <div style={{fontSize:36,background:"rgba(78,205,196,0.15)",borderRadius:"50%",width:56,height:56,display:"flex",alignItems:"center",justifyContent:"center"}}>🌍</div>
+          <div>
+            <div style={{fontSize:10,color:"rgba(255,255,255,0.45)",textTransform:"uppercase",letterSpacing:2}}>Fun Fact of the Day</div>
+            <div style={{fontSize:18,color:"white",fontWeight:"bold"}}>Did you know?</div>
+          </div>
+        </div>
+        <div style={{background:"rgba(78,205,196,0.1)",borderRadius:14,padding:"16px 16px",marginBottom:12,border:"1px solid rgba(78,205,196,0.2)"}}><p style={{color:"white",fontSize:16,margin:0,lineHeight:1.6,textAlign:"center"}}>{fact}</p></div>
+        {factShared
+          ?<div style={{background:"linear-gradient(135deg,#96CEB4,#4ECDC4)",borderRadius:13,padding:"12px 18px",textAlign:"center"}}><span style={{color:"white",fontWeight:"bold",fontSize:15}}>🎉 {kidName} shared the fact! +1 pt!</span></div>
+          :<button onClick={()=>onEarn("fact")} style={{width:"100%",background:"linear-gradient(135deg,#4ECDC4,#45B7D1)",border:"none",borderRadius:13,padding:"13px 20px",color:"white",fontWeight:"bold",fontSize:16,cursor:"pointer"}}>🗣️ {kidName} shared this fact! +1 pt</button>
+        }
+      </div>
+
+      {/* Hangman */}
+      {puzzleEnabled && (
+        <div>
+          {!playingHangman && !puzzleDone && (
+            <div style={{background:"rgba(255,255,255,0.11)",borderRadius:22,padding:28,border:"2px solid rgba(255,255,255,0.2)",textAlign:"center"}}>
+              <div style={{fontSize:56,marginBottom:12}}>🎮</div>
+              <div style={{color:"white",fontWeight:"bold",fontSize:22,marginBottom:8}}>Daily Hangman</div>
+              <div style={{color:"rgba(255,255,255,0.6)",fontSize:14,marginBottom:8}}>Can {kidName} guess today's word?</div>
+              <div style={{background:"rgba(255,215,0,0.1)",borderRadius:14,padding:"12px 16px",marginBottom:20,border:"1px solid rgba(255,215,0,0.2)"}}>
+                <div style={{color:"#FFD700",fontWeight:"bold",fontSize:16}}>🏆 Win = +3 pts</div>
+                <div style={{color:"rgba(255,255,255,0.5)",fontSize:12,marginTop:4}}>6 wrong guesses allowed • Use hint for a clue</div>
+              </div>
+              <button onClick={()=>setPlayingHangman(true)} style={{width:"100%",background:"linear-gradient(135deg,#FF6B6B,#FF8E53)",border:"none",borderRadius:14,padding:"16px",color:"white",fontWeight:"bold",fontSize:20,cursor:"pointer",marginBottom:12}}>
+                🎯 Play Hangman!
+              </button>
+              <button onClick={()=>onEarn("skip")} style={{width:"100%",background:"transparent",border:"none",color:"rgba(255,255,255,0.35)",fontSize:13,cursor:"pointer",padding:"8px"}}>
+                Skip — Go to Word of the Day →
+              </button>
+            </div>
+          )}
+          {playingHangman && !puzzleDone && <HangmanGame word={word.word} definition={word.definition} onWin={handleWin} onLose={handleLose} />}
+          {puzzleDone && (
+            <div style={{background:"rgba(255,255,255,0.11)",borderRadius:22,padding:28,border:"2px solid rgba(255,255,255,0.2)",textAlign:"center"}}>
+              <div style={{fontSize:56,marginBottom:12}}>{hangmanResult==="won"?"🏆":"💪"}</div>
+              <div style={{color:"#FFD700",fontWeight:"bold",fontSize:22,marginBottom:8}}>{hangmanResult==="won"?"Puzzle Complete!":"Good try!"}</div>
+              <div style={{color:"rgba(255,255,255,0.6)",fontSize:14}}>Come back tomorrow for a new word!</div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -646,10 +613,10 @@ function PointsTab({ log, onAdd, onEditLog, soundEnabled, kidName }) {
       <div style={{background:"rgba(255,255,255,0.07)",borderRadius:18,padding:15,border:"2px solid rgba(255,255,255,0.1)"}}>
         <div style={{fontSize:17,color:"white",fontWeight:"bold",marginBottom:10}}>📋 Activity Log</div>
         {log.length===0
-          ? <div style={{color:"rgba(255,255,255,0.35)",fontSize:13,textAlign:"center",padding:"10px 0"}}>No activity yet!</div>
-          : log.slice(0,20).map((e,i) => (
+          ?<div style={{color:"rgba(255,255,255,0.35)",fontSize:13,textAlign:"center",padding:"10px 0"}}>No activity yet!</div>
+          :log.slice(0,20).map((e,i)=>(
             <div key={i} style={{background:e.delta>0?"rgba(46,204,113,0.1)":"rgba(231,76,60,0.1)",borderRadius:10,padding:"9px 12px",marginBottom:7,borderLeft:`3px solid ${e.delta>0?"#2ecc71":"#e74c3c"}`}}>
-              {editingIdx===i ? (
+              {editingIdx===i?(
                 <div>
                   <input value={editReason} onChange={e=>setEditReason(e.target.value)} style={{width:"100%",background:"rgba(255,255,255,0.1)",border:"2px solid rgba(255,255,255,0.2)",borderRadius:8,padding:"7px 10px",color:"white",fontSize:13,outline:"none",marginBottom:8}} />
                   <div style={{display:"flex",alignItems:"center",gap:8}}>
@@ -663,7 +630,7 @@ function PointsTab({ log, onAdd, onEditLog, soundEnabled, kidName }) {
                     <button onClick={()=>{onEditLog(i,null);setEditingIdx(null);}} style={{background:"rgba(231,76,60,0.2)",border:"none",borderRadius:8,padding:"6px 10px",color:"#e74c3c",fontSize:13,cursor:"pointer"}}>🗑️</button>
                   </div>
                 </div>
-              ) : (
+              ):(
                 <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
                   <div style={{flex:1}}>
                     <div style={{fontSize:13,fontWeight:700,color:"white"}}>{e.reason}</div>
@@ -698,11 +665,11 @@ function PrizesTab({ pts, prizes, onSave, onRedeem }) {
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
         <div style={{fontSize:19,color:"white",fontWeight:"bold"}}>🎁 Prize Board</div>
         {!editing
-          ? <button onClick={()=>{setDraft(prizes);setEditing(true);}} style={{background:"rgba(255,255,255,0.12)",border:"2px solid rgba(255,255,255,0.2)",borderRadius:9,padding:"6px 13px",color:"white",fontWeight:"bold",fontSize:12,cursor:"pointer"}}>✏️ Edit</button>
-          : <button onClick={save} style={{background:"linear-gradient(135deg,#2ecc71,#27ae60)",border:"none",borderRadius:9,padding:"6px 13px",color:"white",fontWeight:"bold",fontSize:14,cursor:"pointer"}}>💾 Save</button>
+          ?<button onClick={()=>{setDraft(prizes);setEditing(true);}} style={{background:"rgba(255,255,255,0.12)",border:"2px solid rgba(255,255,255,0.2)",borderRadius:9,padding:"6px 13px",color:"white",fontWeight:"bold",fontSize:12,cursor:"pointer"}}>✏️ Edit</button>
+          :<button onClick={save} style={{background:"linear-gradient(135deg,#2ecc71,#27ae60)",border:"none",borderRadius:9,padding:"6px 13px",color:"white",fontWeight:"bold",fontSize:14,cursor:"pointer"}}>💾 Save</button>
         }
       </div>
-      {sorted.map(p => {
+      {sorted.map(p=>{
         const ok=pts>=p.cost;
         return (
           <div key={p.id} style={{display:"flex",alignItems:"center",gap:12,borderRadius:15,padding:"12px 14px",marginBottom:8,background:ok?"rgba(255,215,0,0.15)":"rgba(255,255,255,0.07)",border:ok?"2px solid rgba(255,215,0,0.4)":"2px solid rgba(255,255,255,0.1)"}}>
@@ -711,13 +678,13 @@ function PrizesTab({ pts, prizes, onSave, onRedeem }) {
               <div style={{fontSize:16,fontWeight:"bold",color:ok?"#FFD700":"white"}}>{p.label}</div>
               <div style={{fontSize:11,color:"rgba(255,255,255,0.4)"}}>{p.cost} pts needed</div>
             </div>
-            {ok ? <button onClick={()=>onRedeem(p)} style={{background:"linear-gradient(135deg,#FFD700,#FFA500)",border:"none",borderRadius:10,padding:"8px 14px",color:"white",fontWeight:"bold",fontSize:13,cursor:"pointer"}}>🎁 Redeem</button>
-                : <div style={{fontSize:11,color:"rgba(255,255,255,0.3)"}}>{p.cost-pts} to go</div>}
-            {editing && <button onClick={()=>setDraft(d=>d.filter(x=>x.id!==p.id))} style={{background:"rgba(231,76,60,0.2)",border:"none",borderRadius:7,padding:"5px 8px",color:"#e74c3c",cursor:"pointer"}}>✕</button>}
+            {ok?<button onClick={()=>onRedeem(p)} style={{background:"linear-gradient(135deg,#FFD700,#FFA500)",border:"none",borderRadius:10,padding:"8px 14px",color:"white",fontWeight:"bold",fontSize:13,cursor:"pointer"}}>🎁 Redeem</button>
+               :<div style={{fontSize:11,color:"rgba(255,255,255,0.3)"}}>{p.cost-pts} to go</div>}
+            {editing&&<button onClick={()=>setDraft(d=>d.filter(x=>x.id!==p.id))} style={{background:"rgba(231,76,60,0.2)",border:"none",borderRadius:7,padding:"5px 8px",color:"#e74c3c",cursor:"pointer"}}>✕</button>}
           </div>
         );
       })}
-      {editing && (
+      {editing&&(
         <div style={{background:"rgba(255,255,255,0.08)",borderRadius:15,padding:15,border:"2px dashed rgba(255,255,255,0.2)",marginTop:10}}>
           <div style={{fontSize:12,color:"rgba(255,255,255,0.45)",marginBottom:10}}>Add a prize:</div>
           <div style={{display:"flex",gap:7,marginBottom:8}}>
@@ -735,69 +702,13 @@ function PrizesTab({ pts, prizes, onSave, onRedeem }) {
   );
 }
 
-function ExtrasTab({ joke, fact, onEarn, jokeShared, factShared, kidName }) {
-  const [showPunchline,setShowPunchline]=useState(false);
-  return (
-    <div>
-      <div style={{background:"rgba(255,255,255,0.11)",borderRadius:22,padding:22,border:"2px solid rgba(255,255,255,0.2)",marginBottom:16}}>
-        <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:14}}>
-          <div style={{fontSize:36,background:"rgba(255,220,0,0.15)",borderRadius:"50%",width:56,height:56,display:"flex",alignItems:"center",justifyContent:"center"}}>😄</div>
-          <div>
-            <div style={{fontSize:10,color:"rgba(255,255,255,0.45)",textTransform:"uppercase",letterSpacing:2}}>Joke of the Day</div>
-            <div style={{fontSize:18,color:"white",fontWeight:"bold"}}>Make someone laugh!</div>
-          </div>
-        </div>
-        <div style={{background:"rgba(255,255,255,0.09)",borderRadius:14,padding:"14px 16px",marginBottom:12}}>
-          <p style={{color:"white",fontSize:16,margin:0,lineHeight:1.5,fontWeight:"600"}}>{joke.setup}</p>
-        </div>
-        {!showPunchline ? (
-          <button onClick={()=>setShowPunchline(true)} style={{width:"100%",background:"linear-gradient(135deg,#FFD700,#FFA500)",border:"none",borderRadius:13,padding:"13px 20px",color:"white",fontWeight:"bold",fontSize:16,cursor:"pointer"}}>
-            🥁 Tap for the Punchline!
-          </button>
-        ) : (
-          <div>
-            <div style={{background:"rgba(255,215,0,0.15)",borderRadius:14,padding:"14px 16px",marginBottom:12,border:"2px solid rgba(255,215,0,0.3)"}}>
-              <p style={{color:"#FFD700",fontSize:16,margin:0,fontWeight:"bold",textAlign:"center"}}>{joke.punchline}</p>
-            </div>
-            {jokeShared
-              ? <div style={{background:"linear-gradient(135deg,#96CEB4,#4ECDC4)",borderRadius:13,padding:"12px 18px",textAlign:"center"}}><span style={{color:"white",fontWeight:"bold",fontSize:15}}>🎉 {kidName} told the joke! +1 pt!</span></div>
-              : <button onClick={()=>onEarn("joke")} style={{width:"100%",background:"linear-gradient(135deg,#FF6B6B,#FF8E53)",border:"none",borderRadius:13,padding:"13px 20px",color:"white",fontWeight:"bold",fontSize:16,cursor:"pointer"}}>🗣️ {kidName} told someone the joke! +1 pt</button>
-            }
-          </div>
-        )}
-      </div>
-      <div style={{background:"rgba(255,255,255,0.11)",borderRadius:22,padding:22,border:"2px solid rgba(255,255,255,0.2)"}}>
-        <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:14}}>
-          <div style={{fontSize:36,background:"rgba(78,205,196,0.15)",borderRadius:"50%",width:56,height:56,display:"flex",alignItems:"center",justifyContent:"center"}}>🌍</div>
-          <div>
-            <div style={{fontSize:10,color:"rgba(255,255,255,0.45)",textTransform:"uppercase",letterSpacing:2}}>Fun Fact of the Day</div>
-            <div style={{fontSize:18,color:"white",fontWeight:"bold"}}>Did you know?</div>
-          </div>
-        </div>
-        <div style={{background:"rgba(78,205,196,0.1)",borderRadius:14,padding:"16px 16px",marginBottom:12,border:"1px solid rgba(78,205,196,0.2)"}}>
-          <p style={{color:"white",fontSize:16,margin:0,lineHeight:1.6,textAlign:"center"}}>{fact}</p>
-        </div>
-        {factShared
-          ? <div style={{background:"linear-gradient(135deg,#96CEB4,#4ECDC4)",borderRadius:13,padding:"12px 18px",textAlign:"center"}}><span style={{color:"white",fontWeight:"bold",fontSize:15}}>🎉 {kidName} shared the fact! +1 pt!</span></div>
-          : <button onClick={()=>onEarn("fact")} style={{width:"100%",background:"linear-gradient(135deg,#4ECDC4,#45B7D1)",border:"none",borderRadius:13,padding:"13px 20px",color:"white",fontWeight:"bold",fontSize:16,cursor:"pointer"}}>🗣️ {kidName} shared this fact! +1 pt</button>
-        }
-      </div>
-    </div>
-  );
-}
-
 function HistoryTab({ history }) {
-  if (!history.length) return (
-    <div style={{textAlign:"center",padding:36}}>
-      <div style={{fontSize:44,marginBottom:10}}>📭</div>
-      <div style={{color:"rgba(255,255,255,0.4)"}}>No words yet — start today!</div>
-    </div>
-  );
-  return (
+  if(!history.length)return(<div style={{textAlign:"center",padding:36}}><div style={{fontSize:44,marginBottom:10}}>📭</div><div style={{color:"rgba(255,255,255,0.4)"}}>No words yet — start today!</div></div>);
+  return(
     <div style={{background:"rgba(255,255,255,0.07)",borderRadius:20,padding:16,border:"2px solid rgba(255,255,255,0.1)"}}>
       <div style={{fontSize:18,color:"white",fontWeight:"bold",marginBottom:12}}>📚 Words Learned</div>
       <div style={{display:"flex",flexWrap:"wrap",gap:7}}>
-        {history.map((x,i) => (
+        {history.map((x,i)=>(
           <span key={i} style={{background:x.used?"rgba(78,205,196,0.18)":"rgba(255,255,255,0.07)",border:x.used?"1px solid rgba(78,205,196,0.35)":"1px solid rgba(255,255,255,0.1)",borderRadius:18,padding:"5px 12px",display:"inline-flex",alignItems:"center",gap:5,fontSize:13,color:"white"}}>
             {x.emoji} {x.word} {x.used&&"✅"}
           </span>
@@ -812,48 +723,41 @@ function SettingsTab({ familyCode, soundEnabled, onToggleSound, puzzleEnabled, o
     <div>
       <div style={{background:"rgba(255,255,255,0.1)",borderRadius:20,padding:18,border:"2px solid rgba(255,255,255,0.18)",marginBottom:14}}>
         <div style={{fontSize:15,color:"white",fontWeight:"bold",marginBottom:14}}>👨‍👩‍👧‍👦 Kids Profiles</div>
-        {kids.map(kid => (
+        {kids.map(kid=>(
           <div key={kid.id} style={{display:"flex",alignItems:"center",gap:12,background:kid.id===activeKidId?"rgba(255,215,0,0.15)":"rgba(255,255,255,0.07)",borderRadius:14,padding:"12px 14px",marginBottom:8,border:kid.id===activeKidId?"2px solid rgba(255,215,0,0.4)":"2px solid transparent"}}>
-            <AvatarDisplay avatarId={kid.avatarId} size={44} />
+            <AvatarDisplay avatarId={kid.avatarId} size={44}/>
             <div style={{flex:1}}>
               <div style={{color:"white",fontWeight:"bold",fontSize:15}}>{kid.name}</div>
               <div style={{color:"rgba(255,255,255,0.4)",fontSize:12}}>Age {kid.age} · {kid.points||0} pts · {kid.difficulty==="easy"?"🐣 Easy":kid.difficulty==="challenge"?"🚀 Challenge":"⭐ Just Right"}</div>
             </div>
             {kid.id===activeKidId
-              ? <div style={{color:"#FFD700",fontSize:12,fontWeight:"bold"}}>Active ✓</div>
-              : <button onClick={()=>onSwitchKid(kid.id)} style={{background:"rgba(255,255,255,0.15)",border:"none",borderRadius:8,padding:"6px 12px",color:"white",fontSize:12,cursor:"pointer"}}>Switch</button>
+              ?<div style={{color:"#FFD700",fontSize:12,fontWeight:"bold"}}>Active ✓</div>
+              :<button onClick={()=>onSwitchKid(kid.id)} style={{background:"rgba(255,255,255,0.15)",border:"none",borderRadius:8,padding:"6px 12px",color:"white",fontSize:12,cursor:"pointer"}}>Switch</button>
             }
             <button onClick={()=>onEditKid(kid)} style={{background:"rgba(255,255,255,0.1)",border:"none",borderRadius:8,padding:"6px 10px",color:"rgba(255,255,255,0.5)",fontSize:12,cursor:"pointer"}}>✏️</button>
           </div>
         ))}
-        <button onClick={onAddKid} style={{width:"100%",background:"linear-gradient(135deg,#4ECDC4,#45B7D1)",border:"none",borderRadius:12,padding:"12px 0",color:"white",fontWeight:"bold",fontSize:15,cursor:"pointer",marginTop:4}}>
-          + Add Another Kid
-        </button>
+        <button onClick={onAddKid} style={{width:"100%",background:"linear-gradient(135deg,#4ECDC4,#45B7D1)",border:"none",borderRadius:12,padding:"12px 0",color:"white",fontWeight:"bold",fontSize:15,cursor:"pointer",marginTop:4}}>+ Add Another Kid</button>
       </div>
+
       <div style={{background:"rgba(255,255,255,0.1)",borderRadius:20,padding:18,border:"2px solid rgba(255,255,255,0.18)",marginBottom:14}}>
-        <div style={{ background: "rgba(255,255,255,0.1)", borderRadius: 20, padding: 18, border: "2px solid rgba(255,255,255,0.18)", marginBottom: 14 }}>
-  <div style={{ fontSize: 15, color: "white", fontWeight: "bold", marginBottom: 14 }}>🎮 Daily Puzzle</div>
-  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-    <div>
-      <div style={{ color: "white", fontSize: 14 }}>Hangman Puzzle</div>
-      <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 12 }}>Show daily puzzle tab</div>
-    </div>
-    <button onClick={onTogglePuzzle} style={{ width: 52, height: 30, borderRadius: 15, border: "none", cursor: "pointer", background: puzzleEnabled ? "linear-gradient(135deg,#2ecc71,#27ae60)" : "rgba(255,255,255,0.2)", position: "relative", transition: "background 0.3s" }}>
-      <div style={{ position: "absolute", top: 3, left: puzzleEnabled ? 24 : 3, width: 24, height: 24, borderRadius: "50%", background: "white", transition: "left 0.3s", boxShadow: "0 2px 4px rgba(0,0,0,0.3)" }} />
-    </button>
-  </div>
-</div>
-        <div style={{fontSize:15,color:"white",fontWeight:"bold",marginBottom:14}}>🔊 Sound</div>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-          <div>
-            <div style={{color:"white",fontSize:14}}>Sound Effects</div>
-            <div style={{color:"rgba(255,255,255,0.4)",fontSize:12}}>Award, deduct and redeem sounds</div>
+        <div style={{fontSize:15,color:"white",fontWeight:"bold",marginBottom:14}}>🔊 Sound & Puzzle</div>
+        {[
+          {label:"Sound Effects",desc:"Award, deduct and redeem sounds",val:soundEnabled,toggle:onToggleSound},
+          {label:"🎮 Daily Hangman",desc:"Show puzzle in Extras tab",val:puzzleEnabled,toggle:onTogglePuzzle},
+        ].map(({label,desc,val,toggle})=>(
+          <div key={label} style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
+            <div>
+              <div style={{color:"white",fontSize:14}}>{label}</div>
+              <div style={{color:"rgba(255,255,255,0.4)",fontSize:12}}>{desc}</div>
+            </div>
+            <button onClick={toggle} style={{width:52,height:30,borderRadius:15,border:"none",cursor:"pointer",background:val?"linear-gradient(135deg,#2ecc71,#27ae60)":"rgba(255,255,255,0.2)",position:"relative",transition:"background 0.3s"}}>
+              <div style={{position:"absolute",top:3,left:val?24:3,width:24,height:24,borderRadius:"50%",background:"white",transition:"left 0.3s",boxShadow:"0 2px 4px rgba(0,0,0,0.3)"}}/>
+            </button>
           </div>
-          <button onClick={onToggleSound} style={{width:52,height:30,borderRadius:15,border:"none",cursor:"pointer",background:soundEnabled?"linear-gradient(135deg,#2ecc71,#27ae60)":"rgba(255,255,255,0.2)",position:"relative",transition:"background 0.3s"}}>
-            <div style={{position:"absolute",top:3,left:soundEnabled?24:3,width:24,height:24,borderRadius:"50%",background:"white",transition:"left 0.3s",boxShadow:"0 2px 4px rgba(0,0,0,0.3)"}} />
-          </button>
-        </div>
+        ))}
       </div>
+
       <div style={{background:"rgba(255,255,255,0.1)",borderRadius:20,padding:18,border:"2px solid rgba(255,255,255,0.18)",marginBottom:14}}>
         <div style={{fontSize:15,color:"white",fontWeight:"bold",marginBottom:8}}>🔑 Family Code</div>
         <div style={{background:"rgba(255,255,255,0.1)",borderRadius:12,padding:"12px 16px",textAlign:"center"}}>
@@ -861,15 +765,14 @@ function SettingsTab({ familyCode, soundEnabled, onToggleSound, puzzleEnabled, o
           <div style={{color:"rgba(255,255,255,0.4)",fontSize:11,marginTop:4}}>Share with your partner to sync devices</div>
         </div>
       </div>
-      <button onClick={onSignOut} style={{width:"100%",background:"rgba(231,76,60,0.2)",border:"2px solid rgba(231,76,60,0.3)",borderRadius:14,padding:"13px",color:"#e74c3c",fontWeight:"bold",fontSize:15,cursor:"pointer"}}>
-        Sign Out
-      </button>
+
+      <button onClick={onSignOut} style={{width:"100%",background:"rgba(231,76,60,0.2)",border:"2px solid rgba(231,76,60,0.3)",borderRadius:14,padding:"13px",color:"#e74c3c",fontWeight:"bold",fontSize:15,cursor:"pointer"}}>Sign Out</button>
     </div>
   );
 }
 
 export default function App() {
-  const today = new Date().toDateString();
+  const today=new Date().toDateString();
   const [familyCode,setFamilyCode]=useState(()=>localStorage.getItem("sk_code")||"");
   const [profile,setProfile]=useState(null);
   const [kids,setKids]=useState([]);
@@ -883,6 +786,7 @@ export default function App() {
   const [history,setHistory]=useState([]);
   const [prizes,setPrizes]=useState(DEFAULT_PRIZES);
   const [soundEnabled,setSoundEnabled]=useState(()=>localStorage.getItem("sk_sound")!=="false");
+  const [puzzleEnabled,setPuzzleEnabled]=useState(()=>localStorage.getItem("sk_puzzle")!=="false");
   const [confetti,setConfetti]=useState(false);
   const [tab,setTab]=useState("word");
   const [saving,setSaving]=useState(false);
@@ -895,134 +799,102 @@ export default function App() {
   const difficulty=activeKid?.difficulty||"justRight";
   const todayContent=getTodayContent(difficulty);
 
-  async function loadProfile(code) {
+  async function loadProfile(code){
     const {data}=await supabase.from("profiles").select("*").eq("family_code",code).single();
-    if (data) {
+    if(data){
       setProfile(data);
-      const kidsData=data.kids||[];
-      setKids(kidsData);
-      const kidId=localStorage.getItem("sk_kid")||kidsData[0]?.id||"";
-      setActiveKidId(kidId);
-      const kid=kidsData.find(k=>k.id===kidId)||kidsData[0];
-      if (kid) {
-        setPts(kid.points||0);setLog(kid.log||[]);
-        setHistory(kid.word_history||[]);setPrizes(kid.prizes||DEFAULT_PRIZES);
-        setUsed(kid.used_date===today);
-        setJokeShared(kid.joke_date===today);
-        setFactShared(kid.fact_date===today);
-        setPuzzleDone(kid.puzzle_date===today);
-      }
-      if (kidsData.length===0) setShowAddKid(true);
+      const kd=data.kids||[];setKids(kd);
+      const kidId=localStorage.getItem("sk_kid")||kd[0]?.id||"";setActiveKidId(kidId);
+      const kid=kd.find(k=>k.id===kidId)||kd[0];
+      if(kid){setPts(kid.points||0);setLog(kid.log||[]);setHistory(kid.word_history||[]);setPrizes(kid.prizes||DEFAULT_PRIZES);setUsed(kid.used_date===today);setJokeShared(kid.joke_date===today);setFactShared(kid.fact_date===today);setPuzzleDone(kid.puzzle_date===today);}
+      if(kd.length===0)setShowAddKid(true);
     }
   }
 
-  async function updateActiveKid(updates) {
+  async function updateActiveKid(updates){
     setSaving(true);
-    const updatedKids=kids.map(k=>k.id===activeKidId?{...k,...updates}:k);
-    await supabase.from("profiles").update({kids:updatedKids}).eq("family_code",familyCode);
-    setKids(updatedKids);setSaving(false);
+    const uk=kids.map(k=>k.id===activeKidId?{...k,...updates}:k);
+    await supabase.from("profiles").update({kids:uk}).eq("family_code",familyCode);
+    setKids(uk);setSaving(false);
   }
 
-  function handleLogin(code,data) {
-    localStorage.setItem("sk_code",code);
-    setFamilyCode(code);setProfile(data);
-    const kidsData=data.kids||[];setKids(kidsData);
-    if (kidsData.length===0){setShowAddKid(true);return;}
-    const kid=kidsData[0];
-    setActiveKidId(kid.id);localStorage.setItem("sk_kid",kid.id);
-    setPts(kid.points||0);setLog(kid.log||[]);
-    setHistory(kid.word_history||[]);setPrizes(kid.prizes||DEFAULT_PRIZES);
-    setUsed(kid.used_date===today);
-    setJokeShared(kid.joke_date===today);
-    setFactShared(kid.fact_date===today);
-    setPuzzleDone(kid.puzzle_date===today);
+  function handleLogin(code,data){
+    localStorage.setItem("sk_code",code);setFamilyCode(code);setProfile(data);
+    const kd=data.kids||[];setKids(kd);
+    if(kd.length===0){setShowAddKid(true);return;}
+    const kid=kd[0];setActiveKidId(kid.id);localStorage.setItem("sk_kid",kid.id);
+    setPts(kid.points||0);setLog(kid.log||[]);setHistory(kid.word_history||[]);setPrizes(kid.prizes||DEFAULT_PRIZES);
+    setUsed(kid.used_date===today);setJokeShared(kid.joke_date===today);setFactShared(kid.fact_date===today);setPuzzleDone(kid.puzzle_date===today);
   }
 
-  async function handleAddKid(kidData) {
-    const newKid={...kidData,id:Date.now()+"",points:0,log:[],word_history:[],prizes:DEFAULT_PRIZES,used_date:"",joke_date:"",fact_date:"",puzzle_date:""};
-    const updatedKids=[...kids,newKid];
-    setSaving(true);
-    await supabase.from("profiles").update({kids:updatedKids}).eq("family_code",familyCode);
-    setKids(updatedKids);setSaving(false);
-    setActiveKidId(newKid.id);localStorage.setItem("sk_kid",newKid.id);
-    setPts(0);setLog([]);setHistory([]);setPrizes(DEFAULT_PRIZES);
-    setUsed(false);setJokeShared(false);setFactShared(false);setPuzzleDone(false);
-    setShowAddKid(false);
+  async function handleAddKid(kidData){
+    const nk={...kidData,id:Date.now()+"",points:0,log:[],word_history:[],prizes:DEFAULT_PRIZES,used_date:"",joke_date:"",fact_date:"",puzzle_date:""};
+    const uk=[...kids,nk];setSaving(true);
+    await supabase.from("profiles").update({kids:uk}).eq("family_code",familyCode);
+    setKids(uk);setSaving(false);setActiveKidId(nk.id);localStorage.setItem("sk_kid",nk.id);
+    setPts(0);setLog([]);setHistory([]);setPrizes(DEFAULT_PRIZES);setUsed(false);setJokeShared(false);setFactShared(false);setPuzzleDone(false);setShowAddKid(false);
   }
 
-  async function handleEditKid(kidData) {
-    const updatedKids=kids.map(k=>k.id===editingKid.id?{...k,...kidData}:k);
-    setSaving(true);
-    await supabase.from("profiles").update({kids:updatedKids}).eq("family_code",familyCode);
-    setKids(updatedKids);setSaving(false);setEditingKid(null);
+  async function handleEditKid(kidData){
+    const uk=kids.map(k=>k.id===editingKid.id?{...k,...kidData}:k);setSaving(true);
+    await supabase.from("profiles").update({kids:uk}).eq("family_code",familyCode);
+    setKids(uk);setSaving(false);setEditingKid(null);
   }
 
-  function handleSwitchKid(kidId) {
+  function handleSwitchKid(kidId){
     const kid=kids.find(k=>k.id===kidId);if(!kid)return;
     setActiveKidId(kidId);localStorage.setItem("sk_kid",kidId);
-    setPts(kid.points||0);setLog(kid.log||[]);
-    setHistory(kid.word_history||[]);setPrizes(kid.prizes||DEFAULT_PRIZES);
-    setUsed(kid.used_date===today);
-    setJokeShared(kid.joke_date===today);
-    setFactShared(kid.fact_date===today);
-    setPuzzleDone(kid.puzzle_date===today);
-    setTab("word");
+    setPts(kid.points||0);setLog(kid.log||[]);setHistory(kid.word_history||[]);setPrizes(kid.prizes||DEFAULT_PRIZES);
+    setUsed(kid.used_date===today);setJokeShared(kid.joke_date===today);setFactShared(kid.fact_date===today);setPuzzleDone(kid.puzzle_date===today);setTab("word");
   }
 
-  async function addPoints(delta,reason,withSound=true) {
+  async function addPoints(delta,reason,withSound=true){
     const next=Math.max(0,pts+delta);
     const entry={delta,reason,d:new Date().toLocaleString("en-US",{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"})};
-    const newLog=[entry,...log];
-    setPts(next);setLog(newLog);
-    await updateActiveKid({points:next,log:newLog});
-    if(withSound&&soundEnabled){
-      if(delta>0){playSound("award");setConfetti(true);setTimeout(()=>setConfetti(false),2000);}
-      else{playSound("deduct");}
-    } else if(delta>0){setConfetti(true);setTimeout(()=>setConfetti(false),2000);}
+    const nl=[entry,...log];setPts(next);setLog(nl);
+    await updateActiveKid({points:next,log:nl});
+    if(withSound&&soundEnabled){if(delta>0){playSound("award");setConfetti(true);setTimeout(()=>setConfetti(false),2000);}else{playSound("deduct");}}
+    else if(delta>0){setConfetti(true);setTimeout(()=>setConfetti(false),2000);}
   }
 
-  async function handleWordUsed() {
+  async function handleWordUsed(){
     const next=Math.max(0,pts+2);
     const entry={delta:2,reason:`Said "${todayContent.word.word}" in a sentence`,d:new Date().toLocaleString("en-US",{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"})};
-    const newLog=[entry,...log];
-    const newHistory=[{word:todayContent.word.word,emoji:todayContent.word.emoji,used:true},...history.filter(x=>x.word!==todayContent.word.word)];
-    setPts(next);setLog(newLog);setUsed(true);setHistory(newHistory);
-    await updateActiveKid({points:next,log:newLog,word_history:newHistory,used_date:today});
-    if(soundEnabled)playSound("award");
-    setConfetti(true);setTimeout(()=>setConfetti(false),2000);
+    const nl=[entry,...log];
+    const nh=[{word:todayContent.word.word,emoji:todayContent.word.emoji,used:true},...history.filter(x=>x.word!==todayContent.word.word)];
+    setPts(next);setLog(nl);setUsed(true);setHistory(nh);
+    await updateActiveKid({points:next,log:nl,word_history:nh,used_date:today});
+    if(soundEnabled)playSound("award");setConfetti(true);setTimeout(()=>setConfetti(false),2000);
   }
 
-  async function handleEditLog(idx,updated) {
-    let newLog;let newPts=pts;
-    if(updated===null){const removed=log[idx];newPts=Math.max(0,pts-removed.delta);newLog=log.filter((_,i)=>i!==idx);}
-    else{newPts=Math.max(0,pts-log[idx].delta+updated.delta);newLog=log.map((e,i)=>i===idx?updated:e);}
-    setPts(newPts);setLog(newLog);await updateActiveKid({points:newPts,log:newLog});
+  async function handleEditLog(idx,updated){
+    let nl;let np=pts;
+    if(updated===null){const r=log[idx];np=Math.max(0,pts-r.delta);nl=log.filter((_,i)=>i!==idx);}
+    else{np=Math.max(0,pts-log[idx].delta+updated.delta);nl=log.map((e,i)=>i===idx?updated:e);}
+    setPts(np);setLog(nl);await updateActiveKid({points:np,log:nl});
   }
 
   async function handleSavePrizes(p){setPrizes(p);await updateActiveKid({prizes:p});}
 
-  async function handleRedeem(prize) {
+  async function handleRedeem(prize){
     const next=Math.max(0,pts-prize.cost);
     const entry={delta:-prize.cost,reason:`🎁 Redeemed: ${prize.label}`,d:new Date().toLocaleString("en-US",{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"})};
-    const newLog=[entry,...log];setPts(next);setLog(newLog);
-    await updateActiveKid({points:next,log:newLog});
-    if(soundEnabled)playSound("redeem");
-    setConfetti(true);setTimeout(()=>setConfetti(false),2500);
+    const nl=[entry,...log];setPts(next);setLog(nl);
+    await updateActiveKid({points:next,log:nl});
+    if(soundEnabled)playSound("redeem");setConfetti(true);setTimeout(()=>setConfetti(false),2500);
   }
 
-  async function handleExtrasEarn(type) {
+  async function handleExtrasEarn(type){
     if(type==="joke"){setJokeShared(true);await updateActiveKid({joke_date:today});}
     if(type==="fact"){setFactShared(true);await updateActiveKid({fact_date:today});}
+    if(type==="hangman_win"){setPuzzleDone(true);await updateActiveKid({puzzle_date:today});await addPoints(3,"🎯 Won today's Hangman! +3 pts");return;}
+    if(type==="hangman_lose"){setPuzzleDone(true);await updateActiveKid({puzzle_date:today});return;}
+    if(type==="skip"){setTab("word");return;}
     await addPoints(1,type==="joke"?"😄 Told today's joke!":"🌍 Shared today's fun fact!");
   }
 
-  async function handlePuzzleEarn(type) {
-    setPuzzleDone(true);
-    await updateActiveKid({puzzle_date:today});
-    if(type==="hangman_win"){await addPoints(3,"🎯 Won today's Hangman! +3 pts");}
-  }
-
-  function handleToggleSound(){const next=!soundEnabled;setSoundEnabled(next);localStorage.setItem("sk_sound",next.toString());}
+  function handleToggleSound(){const n=!soundEnabled;setSoundEnabled(n);localStorage.setItem("sk_sound",n.toString());}
+  function handleTogglePuzzle(){const n=!puzzleEnabled;setPuzzleEnabled(n);localStorage.setItem("sk_puzzle",n.toString());}
   function handleSignOut(){localStorage.removeItem("sk_code");localStorage.removeItem("sk_kid");setFamilyCode("");setProfile(null);setKids([]);}
 
   if(!familyCode||!profile)return <LoginScreen onLogin={handleLogin}/>;
@@ -1032,8 +904,8 @@ export default function App() {
   const TABS=[
     {id:"word",label:"📖",title:"Word"},
     {id:"extras",label:"🎉",title:"Extras"},
-    {id:"puzzle",label:"🎮",title:"Puzzle"},
     {id:"points",label:"⭐",title:"Points"},
+    {id:"prizes",label:"🎁",title:"Prizes"},
     {id:"settings",label:"⚙️",title:"Settings"},
   ];
 
@@ -1057,15 +929,15 @@ export default function App() {
         </div>
         <div style={{maxWidth:460,margin:"0 auto",padding:"0 13px"}}>
           {tab==="word"     && <WordTab     word={todayContent.word} onUsed={handleWordUsed} used={used} kidName={activeKid?.name||"He"}/>}
-          {tab==="extras"   && <ExtrasTab   joke={todayContent.joke} fact={todayContent.fact} onEarn={handleExtrasEarn} jokeShared={jokeShared} factShared={factShared} kidName={activeKid?.name||"He"}/>}
-          {tab==="puzzle"   && <PuzzleTab   word={todayContent.word} definition={todayContent.word.definition} onEarn={handlePuzzleEarn} puzzleDone={puzzleDone} kidName={activeKid?.name||"He"}/>}
+          {tab==="extras"   && <ExtrasTab   joke={todayContent.joke} fact={todayContent.fact} word={todayContent.word} onEarn={handleExtrasEarn} jokeShared={jokeShared} factShared={factShared} puzzleDone={puzzleDone} kidName={activeKid?.name||"He"} puzzleEnabled={puzzleEnabled}/>}
           {tab==="points"   && <PointsTab   log={log} onAdd={addPoints} onEditLog={handleEditLog} soundEnabled={soundEnabled} kidName={activeKid?.name||"Kid"}/>}
-          {tab==="settings" && <SettingsTab familyCode={familyCode} soundEnabled={soundEnabled} onToggleSound={handleToggleSound} kids={kids} activeKidId={activeKidId} onAddKid={()=>setShowAddKid(true)} onEditKid={k=>setEditingKid(k)} onSwitchKid={handleSwitchKid} onSignOut={handleSignOut}/>}
+          {tab==="prizes"   && <PrizesTab   pts={pts} prizes={prizes} onSave={handleSavePrizes} onRedeem={handleRedeem}/>}
+          {tab==="settings" && <SettingsTab familyCode={familyCode} soundEnabled={soundEnabled} onToggleSound={handleToggleSound} puzzleEnabled={puzzleEnabled} onTogglePuzzle={handleTogglePuzzle} kids={kids} activeKidId={activeKidId} onAddKid={()=>setShowAddKid(true)} onEditKid={k=>setEditingKid(k)} onSwitchKid={handleSwitchKid} onSignOut={handleSignOut}/>}
         </div>
       </div>
       <div style={{position:"fixed",bottom:0,left:0,right:0,background:"rgba(15,15,40,0.95)",backdropFilter:"blur(20px)",borderTop:"1px solid rgba(255,255,255,0.1)",padding:"8px 0 12px",zIndex:100}}>
         <div style={{maxWidth:460,margin:"0 auto",display:"flex",justifyContent:"space-around"}}>
-          {TABS.map(t => (
+          {TABS.map(t=>(
             <button key={t.id} onClick={()=>setTab(t.id)} style={{background:"none",border:"none",cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:3,padding:"4px 12px",borderRadius:12}}>
               <div style={{fontSize:22,filter:tab===t.id?"none":"grayscale(60%) opacity(0.6)"}}>{t.label}</div>
               <div style={{fontSize:10,color:tab===t.id?"#FFD700":"rgba(255,255,255,0.4)",fontWeight:tab===t.id?"bold":"normal",letterSpacing:0.5}}>{t.title}</div>
