@@ -1,29 +1,215 @@
 import { useState, useEffect } from "react";
 import { supabase } from "./supabase";
 
-// ─── Word Bank ────────────────────────────────────────────────────────────────
-const WORD_BANK = [
-  { word: "Peculiar", emoji: "🔍", definition: "Something strange or different in an interesting way.", visual: "Imagine a dog wearing tiny sunglasses and reading a newspaper!", example: "That peculiar sound under my bed was just my toy robot." },
-  { word: "Enormous", emoji: "🐘", definition: "Really, really BIG — much bigger than usual.", visual: "Picture an elephant so huge it can barely fit through your front door!", example: "The enormous pizza covered the whole kitchen table." },
-  { word: "Gentle", emoji: "🕊️", definition: "Being soft, careful, and kind — not rough or loud.", visual: "Think of someone tiptoeing through a room of sleeping kittens.", example: "She was gentle holding the tiny baby bunny." },
-  { word: "Radiant", emoji: "✨", definition: "Glowing with bright light — or looking very happy!", visual: "Picture the sun bursting through clouds after rain.", example: "His face was radiant when he saw his birthday present!" },
-  { word: "Curious", emoji: "🔭", definition: "Wanting to learn — always asking why and how!", visual: "Imagine a little explorer with a giant magnifying glass peering into every flower.", example: "She was so curious she followed the butterflies all afternoon." },
-  { word: "Brave", emoji: "🦁", definition: "Doing something even when you feel scared — having courage!", visual: "Think of a tiny knight saying hello to a fire-breathing dragon.", example: "He was brave enough to try the new food, and it was delicious!" },
-  { word: "Ancient", emoji: "🏛️", definition: "Incredibly old — from a very, very long time ago.", visual: "Imagine a dinosaur skeleton so old your great-great-grandparents never saw it alive.", example: "The ancient tree was already huge when great-grandma was born!" },
-  { word: "Generous", emoji: "🎁", definition: "Loving to share and give — having a very kind heart.", visual: "Picture someone with a basket of cookies handing them out to everyone they pass.", example: "She was so generous she shared her snack even though she was hungry." },
-  { word: "Cozy", emoji: "🧸", definition: "Warm, comfortable, and safe — like the best hug ever.", visual: "Imagine the fluffiest blanket and stuffed animals while rain patters on the window.", example: "Reading with dad in the big armchair felt so cozy." },
-  { word: "Magnificent", emoji: "🌅", definition: "So amazing and beautiful it makes you gasp and say WOW!", visual: "Picture a golden castle rising above a rainbow waterfall with flags waving.", example: "The fireworks were so magnificent everyone said ooooh at the same time!" },
-  { word: "Wobbly", emoji: "🍮", definition: "Shaking or moving side to side instead of staying still.", visual: "Imagine a tower of jello wiggling every time someone walks nearby!", example: "His first balance beam try was very wobbly but he didn't fall!" },
-  { word: "Grumpy", emoji: "😤", definition: "Feeling cranky and annoyed — not in a happy mood.", visual: "Picture a bear who woke up to find someone ate all his honey!", example: "He was grumpy before breakfast but cheered up after pancakes." },
-  { word: "Shimmer", emoji: "💎", definition: "To shine with soft flickering light — like little sparkles.", visual: "Imagine sunlight on a lake making thousands of tiny dancing diamonds.", example: "Her costume made her shimmer like a real star when she twirled." },
-  { word: "Dazzle", emoji: "🌟", definition: "To amaze someone so much they can barely believe it.", visual: "Picture a magician pulling star after star out of a hat filling the room with light!", example: "Her volcano project dazzled the whole class with pink foam!" },
-  { word: "Snug", emoji: "🐣", definition: "Fitting perfectly — warm and tucked in just right.", visual: "Think of a baby chick tucked under its mama's warm wing.", example: "The sleeping bag was so snug it felt like being hugged all night." },
-  { word: "Whirl", emoji: "🌀", definition: "To spin around very fast — like a top or leaf in the wind.", visual: "Picture a ballerina spinning so fast she becomes a blur of sparkles!", example: "She loved to whirl in the fallen leaves until she got dizzy." },
-  { word: "Delicate", emoji: "🦋", definition: "Very fragile — needing to be handled with great care.", visual: "Think of a soap bubble floating in the air — one touch and it vanishes.", example: "The delicate butterfly sat on her finger without making a sound." },
-  { word: "Murmur", emoji: "🌊", definition: "A soft, low, gentle sound — like quiet voices or a tiny stream.", visual: "Imagine a brook whispering over pebbles in a quiet forest.", example: "He heard the murmur of his parents talking as he fell asleep." },
-  { word: "Plunge", emoji: "🏊", definition: "To jump or dive quickly and deeply into something.", visual: "Think of a penguin cannonballing off an ice cliff — SPLASH!", example: "He plunged into the pool and swam all the way to the other side." },
-  { word: "Towering", emoji: "🗼", definition: "So tall you have to tip your head all the way back to see the top.", visual: "Imagine pancakes so tall they poke right through the ceiling!", example: "The towering giraffe could look right into the second floor windows." },
-];
+// ─── Tiered Word Banks ────────────────────────────────────────────────────────
+const WORDS = {
+  easy: [
+    { word: "Happy", emoji: "😊", definition: "Feeling really good and full of joy!", visual: "Picture a puppy wagging its tail so fast it wiggles its whole body!", example: "She felt happy when she got a big hug from her mom." },
+    { word: "Brave", emoji: "🦁", definition: "Doing something even when you feel a little scared.", visual: "Think of a tiny mouse standing up to a big cat!", example: "He was brave and tried the new food at dinner." },
+    { word: "Gentle", emoji: "🕊️", definition: "Being soft and careful — not rough.", visual: "Think of someone petting a sleeping kitten very softly.", example: "She was gentle holding the tiny baby bunny." },
+    { word: "Huge", emoji: "🐘", definition: "Really, really BIG!", visual: "Picture an elephant that can barely fit through a door!", example: "The huge pizza covered the whole table." },
+    { word: "Cozy", emoji: "🧸", definition: "Warm and comfortable — like a big hug.", visual: "Imagine snuggling under the fluffiest blanket ever!", example: "Reading with dad felt so cozy." },
+    { word: "Silly", emoji: "🤪", definition: "Funny and a little goofy!", visual: "Picture a clown with a giant red nose doing a funny dance!", example: "The silly monkey made everyone laugh at the zoo." },
+    { word: "Shiny", emoji: "✨", definition: "Bright and sparkly — catches the light!", visual: "Imagine a pile of glittery stars twinkling in the sunshine!", example: "She loved her shiny new shoes." },
+    { word: "Tiny", emoji: "🐜", definition: "Very, very small — teeny tiny!", visual: "Think of an ant trying to carry a giant crumb three times its size!", example: "The tiny puppy fit in the palm of his hand." },
+    { word: "Fast", emoji: "⚡", definition: "Moving really quickly!", visual: "Picture a cheetah zooming past so quickly it's just a blur!", example: "The fast rabbit won the race." },
+    { word: "Quiet", emoji: "🤫", definition: "Making very little or no sound.", visual: "Imagine a whole library full of people all whispering at once.", example: "The quiet mouse tiptoed past the sleeping cat." },
+    { word: "Fluffy", emoji: "☁️", definition: "Soft and light — like a cloud!", visual: "Picture the softest, puffiest pillow you've ever seen.", example: "The fluffy bunny hopped across the yard." },
+    { word: "Yummy", emoji: "😋", definition: "Tasting really, really good!", visual: "Imagine a giant ice cream sundae with all your favorite toppings!", example: "The yummy cookies made the whole house smell amazing." },
+    { word: "Muddy", emoji: "🌧️", definition: "Covered in wet, sticky mud.", visual: "Picture a puppy who jumped in every puddle on the street!", example: "His muddy boots left tracks all over the floor." },
+    { word: "Wiggly", emoji: "🪱", definition: "Moving around a lot — hard to keep still!", visual: "Think of a bowl of jello that bounces every time someone walks by!", example: "The wiggly puppy kept squirming out of her arms." },
+    { word: "Grumpy", emoji: "😤", definition: "Feeling cranky and a little annoyed.", visual: "Picture a bear who just woke up from a nap to find someone ate his honey!", example: "He was grumpy before breakfast but cheered up after pancakes." },
+    { word: "Sparkle", emoji: "💫", definition: "To shine with little flashes of light.", visual: "Imagine a disco ball spinning and sending tiny lights everywhere!", example: "Her fairy wand would sparkle every time she waved it." },
+    { word: "Wobbly", emoji: "🍮", definition: "Shaking side to side — hard to keep steady.", visual: "Think of a tower of jello wiggling when someone walks nearby!", example: "His first try on the balance beam was very wobbly." },
+    { word: "Chilly", emoji: "🥶", definition: "A little bit cold.", visual: "Picture your breath making little puffs of steam on a cold morning!", example: "It was chilly outside so she put on her favorite sweater." },
+    { word: "Proud", emoji: "🏆", definition: "Feeling really good about something you did.", visual: "Imagine standing on a podium with a gold medal around your neck!", example: "He felt proud when he learned to ride his bike." },
+    { word: "Gentle", emoji: "🌸", definition: "Soft, careful, and kind.", visual: "Think of a butterfly landing so softly on a flower you can barely see it touch.", example: "She gave the baby a gentle pat on the back." },
+  ],
+  justRight: [
+    { word: "Peculiar", emoji: "🔍", definition: "Something strange or different in an interesting way.", visual: "Imagine a dog wearing tiny sunglasses and reading a newspaper!", example: "That peculiar sound under my bed was just my toy robot." },
+    { word: "Enormous", emoji: "🐘", definition: "Really, really BIG — much bigger than usual.", visual: "Picture an elephant so huge it can barely fit through your front door!", example: "The enormous pizza covered the whole kitchen table." },
+    { word: "Radiant", emoji: "✨", definition: "Glowing with bright light — or looking very happy!", visual: "Picture the sun bursting through clouds after rain.", example: "His face was radiant when he saw his birthday present!" },
+    { word: "Curious", emoji: "🔭", definition: "Wanting to learn — always asking why and how!", visual: "Imagine a little explorer with a giant magnifying glass peering into every flower.", example: "She was so curious she followed the butterflies all afternoon." },
+    { word: "Ancient", emoji: "🏛️", definition: "Incredibly old — from a very, very long time ago.", visual: "Imagine a dinosaur skeleton so old your great-great-grandparents never saw it alive.", example: "The ancient tree was already huge when great-grandma was born!" },
+    { word: "Generous", emoji: "🎁", definition: "Loving to share and give — having a very kind heart.", visual: "Picture someone with a basket of cookies handing them out to everyone they pass.", example: "She was so generous she shared her snack even though she was hungry." },
+    { word: "Magnificent", emoji: "🌅", definition: "So amazing and beautiful it makes you gasp and say WOW!", visual: "Picture a golden castle rising above a rainbow waterfall with flags waving.", example: "The fireworks were so magnificent everyone said ooooh at the same time!" },
+    { word: "Shimmer", emoji: "💎", definition: "To shine with soft flickering light — like little sparkles.", visual: "Imagine sunlight on a lake making thousands of tiny dancing diamonds.", example: "Her costume made her shimmer like a real star when she twirled." },
+    { word: "Dazzle", emoji: "🌟", definition: "To amaze someone so much they can barely believe it.", visual: "Picture a magician pulling star after star out of a hat filling the room with light!", example: "Her volcano project dazzled the whole class with pink foam!" },
+    { word: "Murmur", emoji: "🌊", definition: "A soft, low, gentle sound — like quiet voices or a tiny stream.", visual: "Imagine a brook whispering over pebbles in a quiet forest.", example: "He heard the murmur of his parents talking as he fell asleep." },
+    { word: "Towering", emoji: "🗼", definition: "So tall you have to tip your head all the way back to see the top.", visual: "Imagine pancakes so tall they poke right through the ceiling!", example: "The towering giraffe could look right into the second floor windows." },
+    { word: "Plunge", emoji: "🏊", definition: "To jump or dive quickly and deeply into something.", visual: "Think of a penguin cannonballing off an ice cliff — SPLASH!", example: "He plunged into the pool and swam all the way to the other side." },
+    { word: "Whirl", emoji: "🌀", definition: "To spin around very fast — like a top or leaf in the wind.", visual: "Picture a ballerina spinning so fast she becomes a blur of sparkles!", example: "She loved to whirl in the fallen leaves until she got dizzy." },
+    { word: "Delicate", emoji: "🦋", definition: "Very fragile — needing to be handled with great care.", visual: "Think of a soap bubble floating in the air — one touch and it vanishes.", example: "The delicate butterfly sat on her finger without making a sound." },
+    { word: "Snug", emoji: "🐣", definition: "Fitting perfectly — warm and tucked in just right.", visual: "Think of a baby chick tucked under its mama's warm wing.", example: "The sleeping bag was so snug it felt like being hugged all night." },
+    { word: "Cozy", emoji: "🧸", definition: "Warm, comfortable, and safe — like the best hug ever.", visual: "Imagine the fluffiest blanket and stuffed animals while rain patters on the window.", example: "Reading with dad in the big armchair felt so cozy." },
+    { word: "Grumpy", emoji: "😤", definition: "Feeling cranky and annoyed — not in a happy mood.", visual: "Picture a bear who woke up to find someone ate all his honey!", example: "He was grumpy before breakfast but cheered up after pancakes." },
+    { word: "Brave", emoji: "🦁", definition: "Doing something even when you feel scared — having courage!", visual: "Think of a tiny knight saying hello to a fire-breathing dragon.", example: "He was brave enough to try the new food, and it was delicious!" },
+    { word: "Gentle", emoji: "🕊️", definition: "Being soft, careful, and kind — not rough or loud.", visual: "Think of someone tiptoeing through a room of sleeping kittens.", example: "She was gentle holding the tiny baby bunny." },
+    { word: "Radiant", emoji: "✨", definition: "Glowing with bright light — or looking very happy!", visual: "Picture the sun bursting through clouds after rain.", example: "His face was radiant when he saw his birthday present!" },
+  ],
+  challenge: [
+    { word: "Resilient", emoji: "💪", definition: "Being able to bounce back after something hard — like a rubber ball!", visual: "Imagine a tree in a huge storm — it bends way over but springs right back up!", example: "She was resilient after falling off her bike — she got right back on." },
+    { word: "Elaborate", emoji: "🏰", definition: "Very detailed and complicated — with lots of parts.", visual: "Picture the most incredible sandcastle ever built with towers, bridges, and tiny flags!", example: "He made an elaborate plan to surprise his mom for her birthday." },
+    { word: "Luminous", emoji: "🌙", definition: "Giving off a beautiful, soft glow of light.", visual: "Imagine the full moon on a clear night making everything look silver and magical.", example: "The luminous stars filled the whole sky on their camping trip." },
+    { word: "Tenacious", emoji: "�bulldog", definition: "Never giving up — holding on tight no matter what!", visual: "Picture a tiny puppy playing tug of war with a giant dog and absolutely refusing to let go!", example: "She was tenacious about learning to swim — she practiced every single day." },
+    { word: "Ambiguous", emoji: "🤔", definition: "When something could mean more than one thing — not totally clear.", visual: "Imagine a picture that looks like a duck from one angle and a rabbit from another!", example: "The directions were ambiguous so they weren't sure which way to turn." },
+    { word: "Persevere", emoji: "🏔️", definition: "To keep going even when things get really hard.", visual: "Picture a mountain climber who keeps climbing even when the wind is howling and it's freezing cold.", example: "He had to persevere through many mistakes before finally solving the puzzle." },
+    { word: "Exquisite", emoji: "💎", definition: "Extremely beautiful — so perfect it takes your breath away.", visual: "Imagine the most detailed, colorful butterfly you've ever seen, with wings like stained glass.", example: "The exquisite painting looked so real she almost reached out to touch it." },
+    { word: "Peculiar", emoji: "🔍", definition: "Strange or unusual in a way that makes you curious.", visual: "Imagine finding a door in the middle of a forest that leads to a completely different world!", example: "The peculiar old house on the hill had lights that flickered on their own." },
+    { word: "Melancholy", emoji: "🌧️", definition: "A deep, quiet kind of sadness — like a rainy afternoon feeling.", visual: "Picture sitting by a window watching rain drops race each other down the glass.", example: "She felt melancholy at the end of summer knowing school was starting soon." },
+    { word: "Audacious", emoji: "🚀", definition: "Super bold and daring — willing to try things most people wouldn't!", visual: "Imagine someone deciding to jump over a canyon on a motorcycle just because they thought they could!", example: "It was audacious of him to challenge the chess champion on his first day of playing." },
+    { word: "Tranquil", emoji: "🏞️", definition: "Perfectly calm and peaceful — no stress, no noise, just quiet.", visual: "Picture a glassy still lake at dawn with mist rising and not a single ripple.", example: "The tranquil garden made everyone feel relaxed the moment they walked in." },
+    { word: "Voracious", emoji: "📚", definition: "Having a huge appetite for something — wanting more and more!", visual: "Imagine someone who reads so fast they finish a whole book before lunch and immediately grabs another!", example: "She was a voracious reader who went through three books every week." },
+    { word: "Inevitable", emoji: "⏳", definition: "Something that is certain to happen — no way to avoid it.", visual: "Picture a giant snowball rolling down a hill getting bigger and bigger — there's no stopping it now!", example: "After staying up so late, it was inevitable that he would be tired in the morning." },
+    { word: "Eloquent", emoji: "🎤", definition: "Able to express ideas in a clear, powerful, and beautiful way.", visual: "Imagine words flowing out of someone like music — every sentence perfectly chosen.", example: "Her eloquent speech made the whole audience feel moved." },
+    { word: "Conspicuous", emoji: "👀", definition: "Standing out so much that everyone notices you.", visual: "Picture someone wearing a bright neon orange suit at a party where everyone else is in black.", example: "The bright red barn was conspicuous in the middle of the snowy white field." },
+    { word: "Diligent", emoji: "📝", definition: "Working hard and carefully — never cutting corners.", visual: "Picture a student who erases and rewrites every letter until their handwriting is absolutely perfect.", example: "Her diligent studying every night helped her ace the test." },
+    { word: "Bewildered", emoji: "😵", definition: "Completely confused — not sure what just happened.", visual: "Imagine walking into a room and forgetting why you came — multiplied by a hundred!", example: "He was bewildered when he walked out and his bike had completely disappeared." },
+    { word: "Formidable", emoji: "🏋️", definition: "So impressive or powerful that it makes you feel a little intimidated.", visual: "Picture the tallest, steepest roller coaster you've ever seen — exciting but also a little scary.", example: "The formidable opponent had never lost a single chess match in three years." },
+    { word: "Serendipity", emoji: "🍀", definition: "Finding something wonderful without even looking for it.", visual: "Imagine reaching into your coat pocket and finding a twenty dollar bill you forgot was there!", example: "It was pure serendipity that they both showed up at the same bookstore and became best friends." },
+    { word: "Exhilarating", emoji: "🎢", definition: "Making you feel wildly excited and full of energy!", visual: "Picture the feeling of the very first drop on the tallest roller coaster — stomach flying, wind roaring!", example: "Surfing her first big wave was the most exhilarating thing she had ever done." },
+  ],
+};
+
+// ─── Tiered Joke Banks ────────────────────────────────────────────────────────
+const JOKES = {
+  easy: [
+    { setup: "Why did the teddy bear say no to dessert?", punchline: "Because she was already stuffed! 🧸" },
+    { setup: "What do you call a sleeping dinosaur?", punchline: "A dino-snore! 🦕" },
+    { setup: "Why did the cookie go to the doctor?", punchline: "Because it was feeling crummy! 🍪" },
+    { setup: "What do you call a fish without eyes?", punchline: "A fsh! 🐟" },
+    { setup: "Why did the bicycle fall over?", punchline: "Because it was two-tired! 🚲" },
+    { setup: "What do you call a bear with no teeth?", punchline: "A gummy bear! 🐻" },
+    { setup: "Why do bees have sticky hair?", punchline: "Because they use a honeycomb! 🐝" },
+    { setup: "What has ears but cannot hear?", punchline: "A cornfield! 🌽" },
+    { setup: "Why did the math book look so sad?", punchline: "Because it had too many problems! 📚" },
+    { setup: "What do you call a magic dog?", punchline: "A labracadabrador! 🐕" },
+    { setup: "Why can't Elsa have a balloon?", punchline: "Because she'll let it go! ❄️" },
+    { setup: "What do elves learn in school?", punchline: "The elf-abet! 🧝" },
+    { setup: "What do you call cheese that isn't yours?", punchline: "Nacho cheese! 🧀" },
+    { setup: "Why did the scarecrow win an award?", punchline: "Because he was outstanding in his field! 🌾" },
+    { setup: "What do you call a lazy kangaroo?", punchline: "A pouch potato! 🦘" },
+    { setup: "Why did the golfer bring extra socks?", punchline: "In case he got a hole in one! ⛳" },
+    { setup: "What did the ocean say to the beach?", punchline: "Nothing, it just waved! 🌊" },
+    { setup: "Why did the superhero flush the toilet?", punchline: "Because it was his doody! 🦸" },
+    { setup: "What do you call a magic owl?", punchline: "Hoo-dini! 🦉" },
+    { setup: "Why did the banana go to the doctor?", punchline: "Because it wasn't peeling well! 🍌" },
+  ],
+  justRight: [
+    { setup: "Why don't scientists trust atoms?", punchline: "Because they make up everything! ⚛️" },
+    { setup: "What do you call a sleeping dinosaur?", punchline: "A dino-snore! 🦕" },
+    { setup: "Why did the math book look so sad?", punchline: "Because it had too many problems! 📚" },
+    { setup: "What has ears but cannot hear?", punchline: "A cornfield! 🌽" },
+    { setup: "Why did the scarecrow win an award?", punchline: "Because he was outstanding in his field! 🌾" },
+    { setup: "What do you call a lazy kangaroo?", punchline: "A pouch potato! 🦘" },
+    { setup: "Why do bees have sticky hair?", punchline: "Because they use a honeycomb! 🐝" },
+    { setup: "What do you call a magic dog?", punchline: "A labracadabrador! 🐕" },
+    { setup: "Why did the golfer bring extra socks?", punchline: "In case he got a hole in one! ⛳" },
+    { setup: "What did the ocean say to the beach?", punchline: "Nothing, it just waved! 🌊" },
+    { setup: "Why did the cookie go to the doctor?", punchline: "Because it was feeling crummy! 🍪" },
+    { setup: "What do you call a bear with no teeth?", punchline: "A gummy bear! 🐻" },
+    { setup: "Why can't Elsa have a balloon?", punchline: "Because she'll let it go! ❄️" },
+    { setup: "What do elves learn in school?", punchline: "The elf-abet! 🧝" },
+    { setup: "What do you call cheese that isn't yours?", punchline: "Nacho cheese! 🧀" },
+    { setup: "Why did the bicycle fall over?", punchline: "Because it was two-tired! 🚲" },
+    { setup: "What do you call a fish without eyes?", punchline: "A fsh! 🐟" },
+    { setup: "Why did the superhero flush the toilet?", punchline: "Because it was his doody! 🦸" },
+    { setup: "What do you call a lazy kangaroo?", punchline: "A pouch potato! 🦘" },
+    { setup: "Why did the golfer bring extra socks?", punchline: "In case he got a hole in one! ⛳" },
+  ],
+  challenge: [
+    { setup: "Why did the physics teacher break up with the biology teacher?", punchline: "There was no chemistry! 🧪" },
+    { setup: "What do you call a factory that makes okay products?", punchline: "A satisfactory! 🏭" },
+    { setup: "I told my doctor I broke my arm in two places.", punchline: "He told me to stop going to those places! 💀" },
+    { setup: "Why can't you trust an atom?", punchline: "They make up literally everything! ⚛️" },
+    { setup: "What do you call a dinosaur that crashes their car?", punchline: "Tyrannosaurus wrecks! 🦖" },
+    { setup: "Why did the scarecrow get promoted?", punchline: "Because he was outstanding in his field! 🌾" },
+    { setup: "What do you call a fish wearing a crown?", punchline: "King of the sea-bass! 👑" },
+    { setup: "Why did the bicycle keep falling over?", punchline: "It was two-tired of standing up! 🚲" },
+    { setup: "What do Alexander the Great and Kermit the Frog have in common?", punchline: "The same middle name! 🐸" },
+    { setup: "Why don't scientists trust stairs?", punchline: "Because they're always up to something! 🪜" },
+    { setup: "What's the difference between a cat and a comma?", punchline: "One has claws at the end of its paws, the other is a pause at the end of a clause! 🐱" },
+    { setup: "Why did the student eat his homework?", punchline: "Because the teacher told him it was a piece of cake! 🎂" },
+    { setup: "What do you call an alligator in a vest?", punchline: "An investigator! 🐊" },
+    { setup: "Why don't oysters share?", punchline: "Because they're shellfish! 🦪" },
+    { setup: "What do you call a fake noodle?", punchline: "An impasta! 🍝" },
+    { setup: "Why did the calendar go to therapy?", punchline: "Because it had too many dates! 📅" },
+    { setup: "What do you call a boomerang that won't come back?", punchline: "A stick! 🪃" },
+    { setup: "Why did the invisible man turn down the job?", punchline: "He couldn't see himself doing it! 👻" },
+    { setup: "What do you call a parade of rabbits hopping backwards?", punchline: "A receding hare-line! 🐰" },
+    { setup: "Why did the golfer wear two pairs of pants?", punchline: "In case he got a hole in one! ⛳" },
+  ],
+};
+
+// ─── Tiered Fun Fact Banks ────────────────────────────────────────────────────
+const FACTS = {
+  easy: [
+    "Dogs have wet noses to help them smell better! 🐶",
+    "Butterflies taste with their feet! 🦋",
+    "A group of flamingos is called a flamboyance! 🦩",
+    "Elephants are the only animals that can't jump! 🐘",
+    "Sea otters hold hands while sleeping so they don't drift apart! 🦦",
+    "Cows have best friends and get sad when separated from them! 🐄",
+    "A snail can sleep for 3 years! 🐌",
+    "Penguins propose to their mates with a pebble! 🐧",
+    "Octopuses have three hearts! 🐙",
+    "Honey never spoils — it lasts forever! 🍯",
+    "A group of cats is called a clowder! 🐱",
+    "Polar bears have black skin under their white fur! 🐻‍❄️",
+    "A group of owls is called a parliament! 🦉",
+    "Wombats produce cube-shaped poop — the only animal that does! 🐨",
+    "Sharks are older than trees! 🦈",
+    "A group of pandas is called an embarrassment! 🐼",
+    "Pigs can get sunburned just like people! 🐷",
+    "Dolphins have names for each other! 🐬",
+    "A baby kangaroo is called a joey and is the size of a jellybean when born! 🦘",
+    "Starfish don't have brains! ⭐",
+  ],
+  justRight: [
+    "A group of flamingos is called a flamboyance! 🦩",
+    "Honey never spoils — archaeologists found 3,000 year old honey in Egyptian tombs and it was still good! 🍯",
+    "Butterflies taste with their feet! 🦋",
+    "A snail can sleep for 3 years! 🐌",
+    "Octopuses have three hearts and blue blood! 🐙",
+    "Cows have best friends and get stressed when separated from them! 🐄",
+    "Sharks are older than trees — they've been around for 450 million years! 🦈",
+    "A group of owls is called a parliament! 🦉",
+    "Sea otters hold hands while sleeping so they don't drift apart! 🦦",
+    "Elephants are the only animals that can't jump! 🐘",
+    "A bolt of lightning is five times hotter than the surface of the sun! ⚡",
+    "Wombats are the only animals that produce cube-shaped poop! 🐨",
+    "The Eiffel Tower grows 6 inches taller in summer because metal expands in heat! 🗼",
+    "Penguins propose to their mates with a pebble! 🐧",
+    "A group of cats is called a clowder! 🐱",
+    "Trees can communicate with each other through underground fungus networks! 🌳",
+    "A shrimp's heart is in its head! 🦐",
+    "Polar bears have black skin under their white fur to absorb heat from the sun! 🐻‍❄️",
+    "A group of pandas is called an embarrassment! 🐼",
+    "A day on Venus is longer than a year on Venus! 🪐",
+  ],
+  challenge: [
+    "There are more possible iterations of a game of chess than there are atoms in the observable universe! ♟️",
+    "Cleopatra lived closer in time to the Moon landing than to the construction of the Great Pyramid! 🏛️",
+    "The human brain generates about 20 watts of power — enough to power a dim light bulb! 🧠",
+    "Oxford University is older than the Aztec Empire — it started teaching in 1096! 📚",
+    "A day on Mercury lasts longer than a year on Mercury! ☿",
+    "Honey badgers have been documented using tools, planning escapes, and even rolling logs to use as steps! 🦡",
+    "The inventor of the Pringles can was buried in one when he died! 🥫",
+    "Nintendo was founded in 1889 — they started by making playing cards! 🎮",
+    "A group of crows is called a murder, a group of ravens is called an unkindness! 🐦‍⬛",
+    "It would take 1.2 million mosquitoes all sucking at once to drain all the blood from a human body! 🦟",
+    "The shortest war in history lasted 38 to 45 minutes — between Britain and Zanzibar in 1896! ⚔️",
+    "Humans share 60% of their DNA with bananas! 🍌",
+    "The average person walks the equivalent of five times around the Earth in their lifetime! 🌍",
+    "Vending machines kill more people per year than sharks! 🦈",
+    "The total weight of all ants on Earth is greater than the total weight of all humans! 🐜",
+    "A single strand of spaghetti is called a spaghetto! 🍝",
+    "The mantis shrimp can punch with the force of a bullet and sees 16 types of color — humans only see 3! 🦐",
+    "There are more stars in the universe than grains of sand on all of Earth's beaches! 🌟",
+    "The longest hiccuping spree lasted 68 years! 😮",
+    "Woolly mammoths were still alive when the Great Pyramid of Giza was being built! 🦣",
+  ],
+};
 
 // ─── Avatars ──────────────────────────────────────────────────────────────────
 const AVATARS = [
@@ -40,34 +226,7 @@ const AVATARS = [
   { id: "explorer",  label: "Super Explorer", category: "Super Adventure",  emoji: "🗺️", color: "#4E342E", bg: "#EFEBE9" },
   { id: "pirate",    label: "Super Pirate",   category: "Super Adventure",  emoji: "🏴‍☠️", color: "#212121", bg: "#F5F5F5" },
 ];
-const DAILY_EXTRAS = [
-  { joke: { setup: "Why did the scarecrow win an award?", punchline: "Because he was outstanding in his field! 🌾" }, fact: "A group of flamingos is called a flamboyance! 🦩" },
-  { joke: { setup: "Why can't Elsa have a balloon?", punchline: "Because she'll let it go! ❄️" }, fact: "Honey never spoils — archaeologists found 3,000 year old honey in Egyptian tombs and it was still good! 🍯" },
-  { joke: { setup: "What do you call a fish without eyes?", punchline: "A fsh! 🐟" }, fact: "Butterflies taste with their feet! They have taste sensors on their legs. 🦋" },
-  { joke: { setup: "Why did the bicycle fall over?", punchline: "Because it was two-tired! 🚲" }, fact: "A snail can sleep for 3 years! 🐌" },
-  { joke: { setup: "What do elves learn in school?", punchline: "The elf-abet! 🧝" }, fact: "Octopuses have three hearts and blue blood! 🐙" },
-  { joke: { setup: "Why don't scientists trust atoms?", punchline: "Because they make up everything! ⚛️" }, fact: "A day on Venus is longer than a year on Venus! It spins so slowly. 🪐" },
-  { joke: { setup: "What do you call a sleeping dinosaur?", punchline: "A dino-snore! 🦕" }, fact: "Cows have best friends and get stressed when separated from them! 🐄" },
-  { joke: { setup: "Why did the math book look so sad?", punchline: "Because it had too many problems! 📚" }, fact: "Sharks are older than trees — they've been around for 450 million years! 🦈" },
-  { joke: { setup: "What do you call cheese that isn't yours?", punchline: "Nacho cheese! 🧀" }, fact: "A group of owls is called a parliament! 🦉" },
-  { joke: { setup: "Why did the teddy bear say no to dessert?", punchline: "Because she was already stuffed! 🧸" }, fact: "Sea otters hold hands while sleeping so they don't drift apart! 🦦" },
-  { joke: { setup: "What did the ocean say to the beach?", punchline: "Nothing, it just waved! 🌊" }, fact: "Elephants are the only animals that can't jump! 🐘" },
-  { joke: { setup: "Why do bees have sticky hair?", punchline: "Because they use a honeycomb! 🐝" }, fact: "A bolt of lightning is five times hotter than the surface of the sun! ⚡" },
-  { joke: { setup: "What do you call a bear with no teeth?", punchline: "A gummy bear! 🐻" }, fact: "Wombats are the only animals that produce cube-shaped poop! 🐨" },
-  { joke: { setup: "Why can't you give Elsa a balloon?", punchline: "She'll just let it go! 🎈" }, fact: "The Eiffel Tower grows 6 inches taller in summer because the metal expands in heat! 🗼" },
-  { joke: { setup: "What do you call a magic dog?", punchline: "A labracadabrador! 🐕" }, fact: "Penguins propose to their mates with a pebble! 🐧" },
-  { joke: { setup: "Why did the cookie go to the doctor?", punchline: "Because it was feeling crummy! 🍪" }, fact: "A group of cats is called a clowder! 🐱" },
-  { joke: { setup: "What has ears but cannot hear?", punchline: "A cornfield! 🌽" }, fact: "Trees can communicate with each other through underground fungus networks! 🌳" },
-  { joke: { setup: "Why did the superhero flush the toilet?", punchline: "Because it was his doody! 🦸" }, fact: "A shrimp's heart is in its head! 🦐" },
-  { joke: { setup: "What do you call a lazy kangaroo?", punchline: "A pouch potato! 🦘" }, fact: "Polar bears have black skin under their white fur to absorb heat from the sun! 🐻‍❄️" },
-  { joke: { setup: "Why did the golfer bring extra socks?", punchline: "In case he got a hole in one! ⛳" }, fact: "A group of pandas is called an embarrassment! 🐼" },
-];
 
-function getTodayExtras() {
-  const now = new Date();
-  const day = Math.floor((now - new Date(now.getFullYear(), 0, 0)) / 86400000);
-  return DAILY_EXTRAS[day % DAILY_EXTRAS.length];
-}
 const DEFAULT_PRIZES = [
   { id: "1", emoji: "🍦", label: "Ice Cream Trip", cost: 10 },
   { id: "2", emoji: "🎮", label: "30 Min Extra Screen Time", cost: 15 },
@@ -77,10 +236,17 @@ const DEFAULT_PRIZES = [
 
 const CONFETTI_COLORS = ["#FFD700","#FF6B6B","#4ECDC4","#45B7D1","#96CEB4","#FFEAA7","#DDA0DD"];
 
-function getTodayWord() {
+function getTodayContent(difficulty = "justRight") {
   const now = new Date();
   const day = Math.floor((now - new Date(now.getFullYear(), 0, 0)) / 86400000);
-  return WORD_BANK[day % WORD_BANK.length];
+  const wordBank = WORDS[difficulty] || WORDS.justRight;
+  const jokeBank = JOKES[difficulty] || JOKES.justRight;
+  const factBank = FACTS[difficulty] || FACTS.justRight;
+  return {
+    word: wordBank[day % wordBank.length],
+    joke: jokeBank[day % jokeBank.length],
+    fact: factBank[day % factBank.length],
+  };
 }
 
 // ─── Sound ────────────────────────────────────────────────────────────────────
@@ -147,7 +313,7 @@ function Confetti({ active }) {
   );
 }
 
-// ─── Avatar Picker ────────────────────────────────────────────────────────────
+// ─── Avatar Components ────────────────────────────────────────────────────────
 function AvatarPicker({ selected, onSelect }) {
   const categories = [...new Set(AVATARS.map(a => a.category))];
   return (
@@ -162,7 +328,6 @@ function AvatarPicker({ selected, onSelect }) {
                 border: selected === a.id ? `2px solid ${a.color}` : "2px solid rgba(255,255,255,0.1)",
                 borderRadius: 14, padding: "12px 8px", cursor: "pointer",
                 display: "flex", flexDirection: "column", alignItems: "center", gap: 6,
-                transition: "all 0.2s",
               }}>
                 <div style={{ fontSize: 36, background: a.bg, borderRadius: "50%", width: 56, height: 56, display: "flex", alignItems: "center", justifyContent: "center" }}>{a.emoji}</div>
                 <div style={{ color: selected === a.id ? "white" : "rgba(255,255,255,0.6)", fontSize: 12, fontWeight: "bold", textAlign: "center" }}>{a.label}</div>
@@ -176,7 +341,6 @@ function AvatarPicker({ selected, onSelect }) {
   );
 }
 
-// ─── Avatar Display ───────────────────────────────────────────────────────────
 function AvatarDisplay({ avatarId, size = 48 }) {
   const avatar = AVATARS.find(a => a.id === avatarId) || AVATARS[0];
   return (
@@ -220,7 +384,7 @@ function LoginScreen({ onLogin }) {
       <div style={{ background: "rgba(255,255,255,0.12)", borderRadius: 24, padding: 36, width: "100%", maxWidth: 380, textAlign: "center", border: "2px solid rgba(255,255,255,0.2)" }}>
         <div style={{ fontSize: 64, marginBottom: 8 }}>⭐</div>
         <h1 style={{ color: "white", fontWeight: "bold", fontSize: 32, marginBottom: 8 }}>SuperKid</h1>
-        <p style={{ color: "rgba(255,255,255,0.6)", fontSize: 14, marginBottom: 28 }}>Enter your family code to get started. Share the same code across all your devices!</p>
+        <p style={{ color: "rgba(255,255,255,0.6)", fontSize: 14, marginBottom: 28 }}>Enter your family code to get started!</p>
         <input value={code} onChange={e => setCode(e.target.value.toUpperCase())} onKeyDown={e => e.key === "Enter" && handleLogin()}
           placeholder="FAMILY CODE" maxLength={10}
           style={{ width: "100%", background: "rgba(255,255,255,0.15)", border: "2px solid rgba(255,255,255,0.3)", borderRadius: 14, padding: "14px 16px", color: "white", fontSize: 22, textAlign: "center", outline: "none", letterSpacing: 4, fontWeight: "bold", marginBottom: 12 }} />
@@ -228,7 +392,7 @@ function LoginScreen({ onLogin }) {
         <button onClick={handleLogin} disabled={loading} style={{ width: "100%", background: "linear-gradient(135deg,#FF6B6B,#FF8E53)", border: "none", borderRadius: 14, padding: "16px", color: "white", fontWeight: "bold", fontSize: 20, cursor: "pointer" }}>
           {loading ? "Loading..." : "Let's Go! 🚀"}
         </button>
-        <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 12, marginTop: 16 }}>New code = new profile. Same code on any device = shared profile.</p>
+        <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 12, marginTop: 16 }}>Same code on any device = shared profile.</p>
       </div>
     </div>
   );
@@ -239,11 +403,18 @@ function AddKidScreen({ onSave, onCancel, existing }) {
   const [name, setName] = useState(existing?.name || "");
   const [age, setAge] = useState(existing?.age || "");
   const [avatarId, setAvatarId] = useState(existing?.avatarId || "lion");
+  const [difficulty, setDifficulty] = useState(existing?.difficulty || "justRight");
 
   function handleSave() {
     if (!name.trim()) return;
-    onSave({ name: name.trim(), age: parseInt(age) || 5, avatarId });
+    onSave({ name: name.trim(), age: parseInt(age) || 5, avatarId, difficulty });
   }
+
+  const diffOptions = [
+    { id: "easy", label: "🐣 Easy", desc: "Ages 3-5" },
+    { id: "justRight", label: "⭐ Just Right", desc: "Age appropriate" },
+    { id: "challenge", label: "🚀 Challenge Me!", desc: "Advanced" },
+  ];
 
   return (
     <div style={{ minHeight: "100vh", background: "linear-gradient(160deg,#1a1a6e,#2d1b69 40%,#11998e 75%,#38ef7d)", padding: "24px 16px 40px" }}>
@@ -262,6 +433,24 @@ function AddKidScreen({ onSave, onCancel, existing }) {
             style={{ width: "100%", background: "rgba(255,255,255,0.1)", border: "2px solid rgba(255,255,255,0.2)", borderRadius: 12, padding: "12px 14px", color: "white", fontSize: 18, outline: "none" }} />
         </div>
 
+        <div style={{ background: "rgba(255,255,255,0.12)", borderRadius: 20, padding: 20, marginBottom: 16, border: "2px solid rgba(255,255,255,0.2)" }}>
+          <div style={{ color: "rgba(255,255,255,0.6)", fontSize: 12, marginBottom: 12, textTransform: "uppercase", letterSpacing: 1 }}>Content Difficulty</div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {diffOptions.map(d => (
+              <button key={d.id} onClick={() => setDifficulty(d.id)} style={{
+                background: difficulty === d.id ? "rgba(255,215,0,0.2)" : "rgba(255,255,255,0.08)",
+                border: difficulty === d.id ? "2px solid rgba(255,215,0,0.5)" : "2px solid rgba(255,255,255,0.1)",
+                borderRadius: 12, padding: "12px 16px", cursor: "pointer",
+                display: "flex", justifyContent: "space-between", alignItems: "center",
+              }}>
+                <span style={{ color: "white", fontWeight: "bold", fontSize: 15 }}>{d.label}</span>
+                <span style={{ color: "rgba(255,255,255,0.5)", fontSize: 12 }}>{d.desc}</span>
+                {difficulty === d.id && <span style={{ color: "#FFD700", fontSize: 14 }}>✓</span>}
+              </button>
+            ))}
+          </div>
+        </div>
+
         <div style={{ background: "rgba(255,255,255,0.12)", borderRadius: 20, padding: 20, marginBottom: 20, border: "2px solid rgba(255,255,255,0.2)" }}>
           <div style={{ color: "rgba(255,255,255,0.6)", fontSize: 12, marginBottom: 14, textTransform: "uppercase", letterSpacing: 1 }}>Choose Avatar</div>
           <AvatarPicker selected={avatarId} onSelect={setAvatarId} />
@@ -276,17 +465,17 @@ function AddKidScreen({ onSave, onCancel, existing }) {
 }
 
 // ─── Word Tab ─────────────────────────────────────────────────────────────────
-function WordTab({ w, onUsed, used, kidName }) {
+function WordTab({ word, onUsed, used, kidName }) {
   return (
     <div style={{ background: "rgba(255,255,255,0.11)", borderRadius: 22, padding: 20, border: "2px solid rgba(255,255,255,0.2)" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 14 }}>
-        <span style={{ fontSize: 36 }}>{w.emoji}</span>
+        <span style={{ fontSize: 36 }}>{word.emoji}</span>
         <div>
           <div style={{ fontSize: 10, color: "rgba(255,255,255,0.45)", textTransform: "uppercase", letterSpacing: 2 }}>Word of the Day</div>
-          <div style={{ fontSize: 32, color: "#FFD700", fontWeight: "bold", lineHeight: 1 }}>{w.word}</div>
+          <div style={{ fontSize: 32, color: "#FFD700", fontWeight: "bold", lineHeight: 1 }}>{word.word}</div>
         </div>
       </div>
-      {[["Means", "#4ECDC4", w.definition, false], ["🌟 Picture", "#96CEB4", w.visual, false], ["💬 Example", "#FFEAA7", `"${w.example}"`, true]].map(([lbl, col, txt, ital]) => (
+      {[["Means", "#4ECDC4", word.definition, false], ["🌟 Picture", "#96CEB4", word.visual, false], ["💬 Example", "#FFEAA7", `"${word.example}"`, true]].map(([lbl, col, txt, ital]) => (
         <div key={lbl} style={{ background: "rgba(255,255,255,0.09)", borderRadius: 12, padding: "11px 13px", marginBottom: 9 }}>
           <p style={{ color: "white", fontSize: 14, margin: 0, lineHeight: 1.55, fontStyle: ital ? "italic" : "normal" }}>
             <strong style={{ color: col, fontStyle: "normal" }}>{lbl}: </strong>{txt}
@@ -313,12 +502,7 @@ function PointsTab({ log, onAdd, onEditLog, soundEnabled, kidName }) {
   const [editReason, setEditReason] = useState("");
   const [editAmt, setEditAmt] = useState(1);
 
-  function startEdit(i) {
-    setEditingIdx(i);
-    setEditReason(log[i].reason);
-    setEditAmt(Math.abs(log[i].delta));
-  }
-
+  function startEdit(i) { setEditingIdx(i); setEditReason(log[i].reason); setEditAmt(Math.abs(log[i].delta)); }
   function saveEdit() {
     const original = log[editingIdx];
     const newDelta = original.delta > 0 ? Math.abs(editAmt) : -Math.abs(editAmt);
@@ -424,7 +608,7 @@ function PrizesTab({ pts, prizes, onSave, onRedeem }) {
               <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)" }}>{p.cost} pts needed</div>
             </div>
             {ok ? (
-              <button onClick={() => onRedeem(p)} style={{ background: "linear-gradient(135deg,#FFD700,#FFA500)", border: "none", borderRadius: 10, padding: "8px 14px", color: "white", fontWeight: "bold", fontSize: 13, cursor: "pointer", boxShadow: "0 2px 8px rgba(255,165,0,0.4)" }}>🎁 Redeem</button>
+              <button onClick={() => onRedeem(p)} style={{ background: "linear-gradient(135deg,#FFD700,#FFA500)", border: "none", borderRadius: 10, padding: "8px 14px", color: "white", fontWeight: "bold", fontSize: 13, cursor: "pointer" }}>🎁 Redeem</button>
             ) : (
               <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)" }}>{p.cost - pts} to go</div>
             )}
@@ -450,19 +634,13 @@ function PrizesTab({ pts, prizes, onSave, onRedeem }) {
   );
 }
 
-// ─── History Tab ──────────────────────────────────────────────────────────────
-function ExtrasTab({ onEarn, jokeShared, factShared, kidName }) {
+// ─── Extras Tab ───────────────────────────────────────────────────────────────
+function ExtrasTab({ joke, fact, onEarn, jokeShared, factShared, kidName }) {
   const [showPunchline, setShowPunchline] = useState(false);
-  const extras = getTodayExtras();
 
   return (
     <div>
-      {/* Joke Card */}
-      <div style={{
-        background: "rgba(255,255,255,0.11)", borderRadius: 22, padding: 22,
-        border: "2px solid rgba(255,255,255,0.2)", marginBottom: 16,
-        boxShadow: "0 8px 32px rgba(0,0,0,0.15)",
-      }}>
+      <div style={{ background: "rgba(255,255,255,0.11)", borderRadius: 22, padding: 22, border: "2px solid rgba(255,255,255,0.2)", marginBottom: 16 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
           <div style={{ fontSize: 36, background: "rgba(255,220,0,0.15)", borderRadius: "50%", width: 56, height: 56, display: "flex", alignItems: "center", justifyContent: "center" }}>😄</div>
           <div>
@@ -470,39 +648,24 @@ function ExtrasTab({ onEarn, jokeShared, factShared, kidName }) {
             <div style={{ fontSize: 18, color: "white", fontWeight: "bold" }}>Make someone laugh!</div>
           </div>
         </div>
-
         <div style={{ background: "rgba(255,255,255,0.09)", borderRadius: 14, padding: "14px 16px", marginBottom: 12 }}>
-          <p style={{ color: "white", fontSize: 16, margin: 0, lineHeight: 1.5, fontWeight: "600" }}>
-            {extras.joke.setup}
-          </p>
+          <p style={{ color: "white", fontSize: 16, margin: 0, lineHeight: 1.5, fontWeight: "600" }}>{joke.setup}</p>
         </div>
-
         {!showPunchline ? (
-          <button onClick={() => setShowPunchline(true)} style={{
-            width: "100%", background: "linear-gradient(135deg,#FFD700,#FFA500)",
-            border: "none", borderRadius: 13, padding: "13px 20px",
-            color: "white", fontWeight: "bold", fontSize: 16, cursor: "pointer",
-            boxShadow: "0 4px 16px rgba(255,165,0,0.3)",
-          }}>
+          <button onClick={() => setShowPunchline(true)} style={{ width: "100%", background: "linear-gradient(135deg,#FFD700,#FFA500)", border: "none", borderRadius: 13, padding: "13px 20px", color: "white", fontWeight: "bold", fontSize: 16, cursor: "pointer" }}>
             🥁 Tap for the Punchline!
           </button>
         ) : (
           <div>
-            <div style={{ background: "linear-gradient(135deg,rgba(255,215,0,0.2),rgba(255,165,0,0.1))", borderRadius: 14, padding: "14px 16px", marginBottom: 12, border: "2px solid rgba(255,215,0,0.3)" }}>
-              <p style={{ color: "#FFD700", fontSize: 16, margin: 0, lineHeight: 1.5, fontWeight: "bold", textAlign: "center" }}>
-                {extras.joke.punchline}
-              </p>
+            <div style={{ background: "rgba(255,215,0,0.15)", borderRadius: 14, padding: "14px 16px", marginBottom: 12, border: "2px solid rgba(255,215,0,0.3)" }}>
+              <p style={{ color: "#FFD700", fontSize: 16, margin: 0, fontWeight: "bold", textAlign: "center" }}>{joke.punchline}</p>
             </div>
             {jokeShared ? (
               <div style={{ background: "linear-gradient(135deg,#96CEB4,#4ECDC4)", borderRadius: 13, padding: "12px 18px", textAlign: "center" }}>
-                <span style={{ color: "white", fontWeight: "bold", fontSize: 15 }}>🎉 {kidName} told the joke! +1 pt earned!</span>
+                <span style={{ color: "white", fontWeight: "bold", fontSize: 15 }}>🎉 {kidName} told the joke! +1 pt!</span>
               </div>
             ) : (
-              <button onClick={() => onEarn("joke")} style={{
-                width: "100%", background: "linear-gradient(135deg,#FF6B6B,#FF8E53)",
-                border: "none", borderRadius: 13, padding: "13px 20px",
-                color: "white", fontWeight: "bold", fontSize: 16, cursor: "pointer",
-              }}>
+              <button onClick={() => onEarn("joke")} style={{ width: "100%", background: "linear-gradient(135deg,#FF6B6B,#FF8E53)", border: "none", borderRadius: 13, padding: "13px 20px", color: "white", fontWeight: "bold", fontSize: 16, cursor: "pointer" }}>
                 🗣️ {kidName} told someone the joke! +1 pt
               </button>
             )}
@@ -510,12 +673,7 @@ function ExtrasTab({ onEarn, jokeShared, factShared, kidName }) {
         )}
       </div>
 
-      {/* Fun Fact Card */}
-      <div style={{
-        background: "rgba(255,255,255,0.11)", borderRadius: 22, padding: 22,
-        border: "2px solid rgba(255,255,255,0.2)",
-        boxShadow: "0 8px 32px rgba(0,0,0,0.15)",
-      }}>
+      <div style={{ background: "rgba(255,255,255,0.11)", borderRadius: 22, padding: 22, border: "2px solid rgba(255,255,255,0.2)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
           <div style={{ fontSize: 36, background: "rgba(78,205,196,0.15)", borderRadius: "50%", width: 56, height: 56, display: "flex", alignItems: "center", justifyContent: "center" }}>🌍</div>
           <div>
@@ -523,24 +681,15 @@ function ExtrasTab({ onEarn, jokeShared, factShared, kidName }) {
             <div style={{ fontSize: 18, color: "white", fontWeight: "bold" }}>Did you know?</div>
           </div>
         </div>
-
         <div style={{ background: "rgba(78,205,196,0.1)", borderRadius: 14, padding: "16px 16px", marginBottom: 12, border: "1px solid rgba(78,205,196,0.2)" }}>
-          <p style={{ color: "white", fontSize: 16, margin: 0, lineHeight: 1.6, textAlign: "center" }}>
-            {extras.fact}
-          </p>
+          <p style={{ color: "white", fontSize: 16, margin: 0, lineHeight: 1.6, textAlign: "center" }}>{fact}</p>
         </div>
-
         {factShared ? (
           <div style={{ background: "linear-gradient(135deg,#96CEB4,#4ECDC4)", borderRadius: 13, padding: "12px 18px", textAlign: "center" }}>
-            <span style={{ color: "white", fontWeight: "bold", fontSize: 15 }}>🎉 {kidName} shared the fact! +1 pt earned!</span>
+            <span style={{ color: "white", fontWeight: "bold", fontSize: 15 }}>🎉 {kidName} shared the fact! +1 pt!</span>
           </div>
         ) : (
-          <button onClick={() => onEarn("fact")} style={{
-            width: "100%", background: "linear-gradient(135deg,#4ECDC4,#45B7D1)",
-            border: "none", borderRadius: 13, padding: "13px 20px",
-            color: "white", fontWeight: "bold", fontSize: 16, cursor: "pointer",
-            boxShadow: "0 4px 16px rgba(78,205,196,0.3)",
-          }}>
+          <button onClick={() => onEarn("fact")} style={{ width: "100%", background: "linear-gradient(135deg,#4ECDC4,#45B7D1)", border: "none", borderRadius: 13, padding: "13px 20px", color: "white", fontWeight: "bold", fontSize: 16, cursor: "pointer" }}>
             🗣️ {kidName} shared this fact! +1 pt
           </button>
         )}
@@ -548,6 +697,8 @@ function ExtrasTab({ onEarn, jokeShared, factShared, kidName }) {
     </div>
   );
 }
+
+// ─── History Tab ──────────────────────────────────────────────────────────────
 function HistoryTab({ history }) {
   if (!history.length) return (
     <div style={{ textAlign: "center", padding: 36 }}>
@@ -573,7 +724,6 @@ function HistoryTab({ history }) {
 function SettingsTab({ familyCode, soundEnabled, onToggleSound, kids, activeKidId, onAddKid, onEditKid, onSwitchKid, onSignOut }) {
   return (
     <div>
-      {/* Kids profiles */}
       <div style={{ background: "rgba(255,255,255,0.1)", borderRadius: 20, padding: 18, border: "2px solid rgba(255,255,255,0.18)", marginBottom: 14 }}>
         <div style={{ fontSize: 15, color: "white", fontWeight: "bold", marginBottom: 14 }}>👨‍👩‍👧‍👦 Kids Profiles</div>
         {kids.map(kid => (
@@ -581,7 +731,7 @@ function SettingsTab({ familyCode, soundEnabled, onToggleSound, kids, activeKidI
             <AvatarDisplay avatarId={kid.avatarId} size={44} />
             <div style={{ flex: 1 }}>
               <div style={{ color: "white", fontWeight: "bold", fontSize: 15 }}>{kid.name}</div>
-              <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 12 }}>Age {kid.age} · {kid.points || 0} pts</div>
+              <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 12 }}>Age {kid.age} · {kid.points || 0} pts · {kid.difficulty === "easy" ? "🐣 Easy" : kid.difficulty === "challenge" ? "🚀 Challenge" : "⭐ Just Right"}</div>
             </div>
             {kid.id === activeKidId
               ? <div style={{ color: "#FFD700", fontSize: 12, fontWeight: "bold" }}>Active ✓</div>
@@ -595,34 +745,27 @@ function SettingsTab({ familyCode, soundEnabled, onToggleSound, kids, activeKidI
         </button>
       </div>
 
-      {/* Sound */}
       <div style={{ background: "rgba(255,255,255,0.1)", borderRadius: 20, padding: 18, border: "2px solid rgba(255,255,255,0.18)", marginBottom: 14 }}>
-        <div style={{ fontSize: 15, color: "white", fontWeight: "bold", marginBottom: 14 }}>🔊 Sound & Notifications</div>
+        <div style={{ fontSize: 15, color: "white", fontWeight: "bold", marginBottom: 14 }}>🔊 Sound</div>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div>
             <div style={{ color: "white", fontSize: 14 }}>Sound Effects</div>
-            <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 12 }}>Award, deduct & redeem sounds</div>
+            <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 12 }}>Award, deduct and redeem sounds</div>
           </div>
-          <button onClick={onToggleSound} style={{
-            width: 52, height: 30, borderRadius: 15, border: "none", cursor: "pointer",
-            background: soundEnabled ? "linear-gradient(135deg,#2ecc71,#27ae60)" : "rgba(255,255,255,0.2)",
-            position: "relative", transition: "background 0.3s",
-          }}>
+          <button onClick={onToggleSound} style={{ width: 52, height: 30, borderRadius: 15, border: "none", cursor: "pointer", background: soundEnabled ? "linear-gradient(135deg,#2ecc71,#27ae60)" : "rgba(255,255,255,0.2)", position: "relative", transition: "background 0.3s" }}>
             <div style={{ position: "absolute", top: 3, left: soundEnabled ? 24 : 3, width: 24, height: 24, borderRadius: "50%", background: "white", transition: "left 0.3s", boxShadow: "0 2px 4px rgba(0,0,0,0.3)" }} />
           </button>
         </div>
       </div>
 
-      {/* Family Code */}
       <div style={{ background: "rgba(255,255,255,0.1)", borderRadius: 20, padding: 18, border: "2px solid rgba(255,255,255,0.18)", marginBottom: 14 }}>
         <div style={{ fontSize: 15, color: "white", fontWeight: "bold", marginBottom: 8 }}>🔑 Family Code</div>
         <div style={{ background: "rgba(255,255,255,0.1)", borderRadius: 12, padding: "12px 16px", textAlign: "center" }}>
           <div style={{ color: "#FFD700", fontSize: 28, fontWeight: "bold", letterSpacing: 6 }}>{familyCode}</div>
-          <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 11, marginTop: 4 }}>Share this code with your partner to sync devices</div>
+          <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 11, marginTop: 4 }}>Share with your partner to sync devices</div>
         </div>
       </div>
 
-      {/* Sign out */}
       <button onClick={onSignOut} style={{ width: "100%", background: "rgba(231,76,60,0.2)", border: "2px solid rgba(231,76,60,0.3)", borderRadius: 14, padding: "13px", color: "#e74c3c", fontWeight: "bold", fontSize: 15, cursor: "pointer" }}>
         Sign Out
       </button>
@@ -633,7 +776,6 @@ function SettingsTab({ familyCode, soundEnabled, onToggleSound, kids, activeKidI
 // ─── App ──────────────────────────────────────────────────────────────────────
 export default function App() {
   const today = new Date().toDateString();
-  const w = getTodayWord();
 
   const [familyCode, setFamilyCode] = useState(() => localStorage.getItem("sk_code") || "");
   const [profile, setProfile] = useState(null);
@@ -643,7 +785,7 @@ export default function App() {
   const [log, setLog] = useState([]);
   const [used, setUsed] = useState(false);
   const [jokeShared, setJokeShared] = useState(false);
-const [factShared, setFactShared] = useState(false);
+  const [factShared, setFactShared] = useState(false);
   const [history, setHistory] = useState([]);
   const [prizes, setPrizes] = useState(DEFAULT_PRIZES);
   const [soundEnabled, setSoundEnabled] = useState(() => localStorage.getItem("sk_sound") !== "false");
@@ -656,6 +798,8 @@ const [factShared, setFactShared] = useState(false);
   useEffect(() => { if (familyCode) loadProfile(familyCode); }, []);
 
   const activeKid = kids.find(k => k.id === activeKidId) || kids[0];
+  const difficulty = activeKid?.difficulty || "justRight";
+  const todayContent = getTodayContent(difficulty);
 
   async function loadProfile(code) {
     const { data } = await supabase.from("profiles").select("*").eq("family_code", code).single();
@@ -667,18 +811,19 @@ const [factShared, setFactShared] = useState(false);
       setActiveKidId(kidId);
       const kid = kidsData.find(k => k.id === kidId) || kidsData[0];
       if (kid) {
-        setPts(kid.points || 0);
-        setLog(kid.log || []);
-        setHistory(kid.word_history || []);
-        setPrizes(kid.prizes || DEFAULT_PRIZES);
+        setPts(kid.points || 0); setLog(kid.log || []);
+        setHistory(kid.word_history || []); setPrizes(kid.prizes || DEFAULT_PRIZES);
         setUsed(kid.used_date === today);
+        setJokeShared(kid.joke_date === today);
+        setFactShared(kid.fact_date === today);
       }
       if (kidsData.length === 0) setShowAddKid(true);
     }
   }
 
-  async function saveKids(updatedKids) {
+  async function updateActiveKid(updates) {
     setSaving(true);
+    const updatedKids = kids.map(k => k.id === activeKidId ? { ...k, ...updates } : k);
     await supabase.from("profiles").update({ kids: updatedKids }).eq("family_code", familyCode);
     setKids(updatedKids);
     setSaving(false);
@@ -691,46 +836,44 @@ const [factShared, setFactShared] = useState(false);
     setKids(kidsData);
     if (kidsData.length === 0) { setShowAddKid(true); return; }
     const kid = kidsData[0];
-    setActiveKidId(kid.id);
-    localStorage.setItem("sk_kid", kid.id);
+    setActiveKidId(kid.id); localStorage.setItem("sk_kid", kid.id);
     setPts(kid.points || 0); setLog(kid.log || []);
     setHistory(kid.word_history || []); setPrizes(kid.prizes || DEFAULT_PRIZES);
     setUsed(kid.used_date === today);
+    setJokeShared(kid.joke_date === today);
+    setFactShared(kid.fact_date === today);
   }
 
   async function handleAddKid(kidData) {
-    const newKid = { ...kidData, id: Date.now() + "", points: 0, log: [], word_history: [], prizes: DEFAULT_PRIZES, used_date: "" };
+    const newKid = { ...kidData, id: Date.now() + "", points: 0, log: [], word_history: [], prizes: DEFAULT_PRIZES, used_date: "", joke_date: "", fact_date: "" };
     const updatedKids = [...kids, newKid];
-    await saveKids(updatedKids);
-    setActiveKidId(newKid.id);
-    localStorage.setItem("sk_kid", newKid.id);
-    setPts(0); setLog([]); setHistory([]); setPrizes(DEFAULT_PRIZES); setUsed(false);
+    setSaving(true);
+    await supabase.from("profiles").update({ kids: updatedKids }).eq("family_code", familyCode);
+    setKids(updatedKids); setSaving(false);
+    setActiveKidId(newKid.id); localStorage.setItem("sk_kid", newKid.id);
+    setPts(0); setLog([]); setHistory([]); setPrizes(DEFAULT_PRIZES);
+    setUsed(false); setJokeShared(false); setFactShared(false);
     setShowAddKid(false);
   }
 
   async function handleEditKid(kidData) {
     const updatedKids = kids.map(k => k.id === editingKid.id ? { ...k, ...kidData } : k);
-    await saveKids(updatedKids);
+    setSaving(true);
+    await supabase.from("profiles").update({ kids: updatedKids }).eq("family_code", familyCode);
+    setKids(updatedKids); setSaving(false);
     setEditingKid(null);
   }
 
   function handleSwitchKid(kidId) {
     const kid = kids.find(k => k.id === kidId);
     if (!kid) return;
-    setActiveKidId(kidId);
-    localStorage.setItem("sk_kid", kidId);
+    setActiveKidId(kidId); localStorage.setItem("sk_kid", kidId);
     setPts(kid.points || 0); setLog(kid.log || []);
     setHistory(kid.word_history || []); setPrizes(kid.prizes || DEFAULT_PRIZES);
     setUsed(kid.used_date === today);
+    setJokeShared(kid.joke_date === today);
+    setFactShared(kid.fact_date === today);
     setTab("word");
-  }
-
-  async function updateActiveKid(updates) {
-    setSaving(true);
-    const updatedKids = kids.map(k => k.id === activeKidId ? { ...k, ...updates } : k);
-    await supabase.from("profiles").update({ kids: updatedKids }).eq("family_code", familyCode);
-    setKids(updatedKids);
-    setSaving(false);
   }
 
   async function addPoints(delta, reason, withSound = true) {
@@ -747,42 +890,35 @@ const [factShared, setFactShared] = useState(false);
 
   async function handleWordUsed() {
     const next = Math.max(0, pts + 2);
-    const entry = { delta: 2, reason: `Said "${w.word}" in a sentence`, d: new Date().toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) };
+    const entry = { delta: 2, reason: `Said "${todayContent.word.word}" in a sentence`, d: new Date().toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) };
     const newLog = [entry, ...log];
-    const newHistory = [{ word: w.word, emoji: w.emoji, used: true }, ...history.filter(x => x.word !== w.word)];
+    const newHistory = [{ word: todayContent.word.word, emoji: todayContent.word.emoji, used: true }, ...history.filter(x => x.word !== todayContent.word.word)];
     setPts(next); setLog(newLog); setUsed(true); setHistory(newHistory);
     await updateActiveKid({ points: next, log: newLog, word_history: newHistory, used_date: today });
     if (soundEnabled) playSound("award");
     setConfetti(true); setTimeout(() => setConfetti(false), 2000);
   }
 
+  async function handleEditLog(idx, updated) {
+    let newLog; let newPts = pts;
+    if (updated === null) {
+      const removed = log[idx];
+      newPts = Math.max(0, pts - removed.delta);
+      newLog = log.filter((_, i) => i !== idx);
+    } else {
+      const oldDelta = log[idx].delta;
+      newPts = Math.max(0, pts - oldDelta + updated.delta);
+      newLog = log.map((e, i) => i === idx ? updated : e);
+    }
+    setPts(newPts); setLog(newLog);
+    await updateActiveKid({ points: newPts, log: newLog });
+  }
+
   async function handleSavePrizes(p) {
     setPrizes(p);
     await updateActiveKid({ prizes: p });
   }
-  async function handleExtrasEarn(type) {
-  if (type === "joke") { setJokeShared(true); }
-  if (type === "fact") { setFactShared(true); }
-  await addPoints(1, type === "joke" ? "😄 Told today's joke!" : "🌍 Shared today's fun fact!");
-}
-async function handleEditLog(idx, updated) {
-  let newLog;
-  let newPts = pts;
-  if (updated === null) {
-    // Delete entry
-    const removed = log[idx];
-    newPts = Math.max(0, pts - removed.delta);
-    newLog = log.filter((_, i) => i !== idx);
-  } else {
-    // Edit entry
-    const oldDelta = log[idx].delta;
-    const newDelta = updated.delta;
-    newPts = Math.max(0, pts - oldDelta + newDelta);
-    newLog = log.map((e, i) => i === idx ? updated : e);
-  }
-  setPts(newPts); setLog(newLog);
-  await updateActiveKid({ points: newPts, log: newLog });
-}
+
   async function handleRedeem(prize) {
     const next = Math.max(0, pts - prize.cost);
     const entry = { delta: -prize.cost, reason: `🎁 Redeemed: ${prize.label}`, d: new Date().toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) };
@@ -793,6 +929,12 @@ async function handleEditLog(idx, updated) {
     setConfetti(true); setTimeout(() => setConfetti(false), 2500);
   }
 
+  async function handleExtrasEarn(type) {
+    if (type === "joke") { setJokeShared(true); await updateActiveKid({ joke_date: today }); }
+    if (type === "fact") { setFactShared(true); await updateActiveKid({ fact_date: today }); }
+    await addPoints(1, type === "joke" ? "😄 Told today's joke!" : "🌍 Shared today's fun fact!");
+  }
+
   function handleToggleSound() {
     const next = !soundEnabled;
     setSoundEnabled(next);
@@ -800,8 +942,7 @@ async function handleEditLog(idx, updated) {
   }
 
   function handleSignOut() {
-    localStorage.removeItem("sk_code");
-    localStorage.removeItem("sk_kid");
+    localStorage.removeItem("sk_code"); localStorage.removeItem("sk_kid");
     setFamilyCode(""); setProfile(null); setKids([]);
   }
 
@@ -809,13 +950,13 @@ async function handleEditLog(idx, updated) {
   if (showAddKid) return <AddKidScreen onSave={handleAddKid} onCancel={() => kids.length > 0 && setShowAddKid(false)} existing={null} />;
   if (editingKid) return <AddKidScreen onSave={handleEditKid} onCancel={() => setEditingKid(null)} existing={editingKid} />;
 
-const TABS = [
-  { id: "word",     label: "📖", title: "Word" },
-  { id: "extras",   label: "🎉", title: "Extras" },
-  { id: "points",   label: "⭐", title: "Points" },
-  { id: "prizes",   label: "🎁", title: "Prizes" },
-  { id: "settings", label: "⚙️", title: "Settings" },
-];
+  const TABS = [
+    { id: "word",     label: "📖", title: "Word" },
+    { id: "extras",   label: "🎉", title: "Extras" },
+    { id: "points",   label: "⭐", title: "Points" },
+    { id: "prizes",   label: "🎁", title: "Prizes" },
+    { id: "settings", label: "⚙️", title: "Settings" },
+  ];
 
   return (
     <>
@@ -828,14 +969,11 @@ const TABS = [
       `}</style>
       <Confetti active={confetti} />
       <div style={{ paddingBottom: 80 }}>
-        {/* Header */}
         <div style={{ padding: "18px 16px 14px", background: "rgba(0,0,0,0.2)", marginBottom: 14 }}>
           <div style={{ maxWidth: 460, margin: "0 auto", display: "flex", alignItems: "center", gap: 12 }}>
             {activeKid && <AvatarDisplay avatarId={activeKid.avatarId} size={44} />}
             <div style={{ flex: 1 }}>
-              <div style={{ color: "white", fontWeight: "bold", fontSize: 18 }}>
-                {activeKid ? `${activeKid.name}'s SuperKid` : "SuperKid"}
-              </div>
+              <div style={{ color: "white", fontWeight: "bold", fontSize: 18 }}>{activeKid ? `${activeKid.name}'s SuperKid` : "SuperKid"}</div>
               <div style={{ color: "rgba(255,255,255,0.5)", fontSize: 11 }}>
                 {new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
                 {saving && " · saving..."}
@@ -848,22 +986,19 @@ const TABS = [
           </div>
         </div>
 
-        {/* Content */}
         <div style={{ maxWidth: 460, margin: "0 auto", padding: "0 13px" }}>
-          {tab === "word"     && <WordTab     w={w} onUsed={handleWordUsed} used={used} kidName={activeKid?.name || "He"} />}
-          {tab === "points" && <PointsTab log={log} onAdd={addPoints} onEditLog={handleEditLog} soundEnabled={soundEnabled} kidName={activeKid?.name || "Kid"} />}
+          {tab === "word"     && <WordTab     word={todayContent.word} onUsed={handleWordUsed} used={used} kidName={activeKid?.name || "He"} />}
+          {tab === "extras"   && <ExtrasTab   joke={todayContent.joke} fact={todayContent.fact} onEarn={handleExtrasEarn} jokeShared={jokeShared} factShared={factShared} kidName={activeKid?.name || "He"} />}
+          {tab === "points"   && <PointsTab   log={log} onAdd={addPoints} onEditLog={handleEditLog} soundEnabled={soundEnabled} kidName={activeKid?.name || "Kid"} />}
           {tab === "prizes"   && <PrizesTab   pts={pts} prizes={prizes} onSave={handleSavePrizes} onRedeem={handleRedeem} />}
-          {tab === "extras"   && <ExtrasTab   onEarn={handleExtrasEarn} jokeShared={jokeShared} factShared={factShared} kidName={activeKid?.name || "He"} />}
-{tab === "history"  && <HistoryTab  history={history} />}
           {tab === "settings" && <SettingsTab familyCode={familyCode} soundEnabled={soundEnabled} onToggleSound={handleToggleSound} kids={kids} activeKidId={activeKidId} onAddKid={() => setShowAddKid(true)} onEditKid={k => setEditingKid(k)} onSwitchKid={handleSwitchKid} onSignOut={handleSignOut} />}
         </div>
       </div>
 
-      {/* Bottom Nav */}
       <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, background: "rgba(15,15,40,0.95)", backdropFilter: "blur(20px)", borderTop: "1px solid rgba(255,255,255,0.1)", padding: "8px 0 12px", zIndex: 100 }}>
         <div style={{ maxWidth: 460, margin: "0 auto", display: "flex", justifyContent: "space-around" }}>
           {TABS.map(t => (
-            <button key={t.id} onClick={() => setTab(t.id)} style={{ background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 3, padding: "4px 12px", borderRadius: 12, transition: "all 0.2s" }}>
+            <button key={t.id} onClick={() => setTab(t.id)} style={{ background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 3, padding: "4px 12px", borderRadius: 12 }}>
               <div style={{ fontSize: 22, filter: tab === t.id ? "none" : "grayscale(60%) opacity(0.6)" }}>{t.label}</div>
               <div style={{ fontSize: 10, color: tab === t.id ? "#FFD700" : "rgba(255,255,255,0.4)", fontWeight: tab === t.id ? "bold" : "normal", letterSpacing: 0.5 }}>{t.title}</div>
               {tab === t.id && <div style={{ width: 4, height: 4, borderRadius: "50%", background: "#FFD700" }} />}
