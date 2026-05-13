@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "./supabase";
 
+// ─── Word Bank ────────────────────────────────────────────────────────────────
 const WORD_BANK = [
   { word: "Peculiar", emoji: "🔍", definition: "Something strange or different in an interesting way.", visual: "Imagine a dog wearing tiny sunglasses and reading a newspaper!", example: "That peculiar sound under my bed was just my toy robot." },
   { word: "Enormous", emoji: "🐘", definition: "Really, really BIG — much bigger than usual.", visual: "Picture an elephant so huge it can barely fit through your front door!", example: "The enormous pizza covered the whole kitchen table." },
@@ -24,6 +25,22 @@ const WORD_BANK = [
   { word: "Towering", emoji: "🗼", definition: "So tall you have to tip your head all the way back to see the top.", visual: "Imagine pancakes so tall they poke right through the ceiling!", example: "The towering giraffe could look right into the second floor windows." },
 ];
 
+// ─── Avatars ──────────────────────────────────────────────────────────────────
+const AVATARS = [
+  { id: "lion",      label: "Super Lion",     category: "Super Animals",    emoji: "🦁", color: "#FF6B35", bg: "#FFF3E0" },
+  { id: "eagle",     label: "Super Eagle",    category: "Super Animals",    emoji: "🦅", color: "#1565C0", bg: "#E3F2FD" },
+  { id: "dragon",    label: "Super Dragon",   category: "Super Creatures",  emoji: "🐉", color: "#6A1B9A", bg: "#F3E5F5" },
+  { id: "phoenix",   label: "Super Phoenix",  category: "Super Creatures",  emoji: "🔥", color: "#E53935", bg: "#FFEBEE" },
+  { id: "hero",      label: "Super Hero",     category: "Super Heroes",     emoji: "🦸", color: "#1976D2", bg: "#E3F2FD" },
+  { id: "heroine",   label: "Super Heroine",  category: "Super Heroes",     emoji: "🦸‍♀️", color: "#C2185B", bg: "#FCE4EC" },
+  { id: "astronaut", label: "Super Astronaut",category: "Super Astronauts", emoji: "🚀", color: "#00838F", bg: "#E0F7FA" },
+  { id: "alien",     label: "Super Alien",    category: "Super Astronauts", emoji: "👾", color: "#2E7D32", bg: "#E8F5E9" },
+  { id: "champion",  label: "Super Champion", category: "Super Athletes",   emoji: "🏆", color: "#F57F17", bg: "#FFFDE7" },
+  { id: "ninja",     label: "Super Ninja",    category: "Super Athletes",   emoji: "🥷", color: "#37474F", bg: "#ECEFF1" },
+  { id: "explorer",  label: "Super Explorer", category: "Super Adventure",  emoji: "🗺️", color: "#4E342E", bg: "#EFEBE9" },
+  { id: "pirate",    label: "Super Pirate",   category: "Super Adventure",  emoji: "🏴‍☠️", color: "#212121", bg: "#F5F5F5" },
+];
+
 const DEFAULT_PRIZES = [
   { id: "1", emoji: "🍦", label: "Ice Cream Trip", cost: 10 },
   { id: "2", emoji: "🎮", label: "30 Min Extra Screen Time", cost: 15 },
@@ -39,64 +56,48 @@ function getTodayWord() {
   return WORD_BANK[day % WORD_BANK.length];
 }
 
+// ─── Sound ────────────────────────────────────────────────────────────────────
 function playSound(type) {
   try {
     const ctx = new (window.AudioContext || window.webkitAudioContext)();
     if (type === "award") {
-      // Upbeat winning fanfare
-      const notes = [523, 659, 784, 1047, 1319];
-      notes.forEach((freq, i) => {
-        const o = ctx.createOscillator();
-        const g = ctx.createGain();
+      [523, 659, 784, 1047, 1319].forEach((freq, i) => {
+        const o = ctx.createOscillator(); const g = ctx.createGain();
         o.connect(g); g.connect(ctx.destination);
-        o.frequency.value = freq;
-        o.type = "square";
+        o.frequency.value = freq; o.type = "square";
         g.gain.setValueAtTime(0, ctx.currentTime + i * 0.1);
         g.gain.linearRampToValueAtTime(0.3, ctx.currentTime + i * 0.1 + 0.05);
         g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.1 + 0.3);
-        o.start(ctx.currentTime + i * 0.1);
-        o.stop(ctx.currentTime + i * 0.1 + 0.3);
+        o.start(ctx.currentTime + i * 0.1); o.stop(ctx.currentTime + i * 0.1 + 0.3);
       });
-} else if (type === "deduct") {
-  // Dramatic descending "dun dun dunnn"
-  const notes = [
-    { freq: 392, start: 0,    dur: 0.2  },
-    { freq: 349, start: 0.22, dur: 0.2  },
-    { freq: 294, start: 0.44, dur: 0.6  },
-  ];
-  notes.forEach(({ freq, start, dur }) => {
-    const o = ctx.createOscillator();
-    const g = ctx.createGain();
-    o.connect(g); g.connect(ctx.destination);
-    o.type = "triangle";
-    o.frequency.setValueAtTime(freq, ctx.currentTime + start);
-    o.frequency.linearRampToValueAtTime(freq * 0.95, ctx.currentTime + start + dur);
-    g.gain.setValueAtTime(0, ctx.currentTime + start);
-    g.gain.linearRampToValueAtTime(0.4, ctx.currentTime + start + 0.03);
-    g.gain.setValueAtTime(0.4, ctx.currentTime + start + dur - 0.1);
-    g.gain.linearRampToValueAtTime(0, ctx.currentTime + start + dur);
-    o.start(ctx.currentTime + start);
-    o.stop(ctx.currentTime + start + dur + 0.05);
-  });
+    } else if (type === "deduct") {
+      const notes = [{ freq: 392, start: 0, dur: 0.2 }, { freq: 349, start: 0.22, dur: 0.2 }, { freq: 294, start: 0.44, dur: 0.6 }];
+      notes.forEach(({ freq, start, dur }) => {
+        const o = ctx.createOscillator(); const g = ctx.createGain();
+        o.connect(g); g.connect(ctx.destination); o.type = "triangle";
+        o.frequency.setValueAtTime(freq, ctx.currentTime + start);
+        o.frequency.linearRampToValueAtTime(freq * 0.95, ctx.currentTime + start + dur);
+        g.gain.setValueAtTime(0, ctx.currentTime + start);
+        g.gain.linearRampToValueAtTime(0.4, ctx.currentTime + start + 0.03);
+        g.gain.setValueAtTime(0.4, ctx.currentTime + start + dur - 0.1);
+        g.gain.linearRampToValueAtTime(0, ctx.currentTime + start + dur);
+        o.start(ctx.currentTime + start); o.stop(ctx.currentTime + start + dur + 0.05);
+      });
     } else if (type === "redeem") {
-      // Big winner celebration
-      const celebration = [523, 659, 784, 1047, 784, 1047, 1319];
-      celebration.forEach((freq, i) => {
-        const o = ctx.createOscillator();
-        const g = ctx.createGain();
+      [523, 659, 784, 659, 1047].forEach((freq, i) => {
+        const o = ctx.createOscillator(); const g = ctx.createGain();
         o.connect(g); g.connect(ctx.destination);
-        o.frequency.value = freq;
-        o.type = i % 2 === 0 ? "square" : "sine";
+        o.frequency.value = freq; o.type = i % 2 === 0 ? "square" : "sine";
         g.gain.setValueAtTime(0, ctx.currentTime + i * 0.1);
         g.gain.linearRampToValueAtTime(0.3, ctx.currentTime + i * 0.1 + 0.05);
         g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.1 + 0.35);
-        o.start(ctx.currentTime + i * 0.1);
-        o.stop(ctx.currentTime + i * 0.1 + 0.35);
+        o.start(ctx.currentTime + i * 0.1); o.stop(ctx.currentTime + i * 0.1 + 0.35);
       });
     }
   } catch(e) {}
 }
 
+// ─── Confetti ─────────────────────────────────────────────────────────────────
 function Confetti({ active }) {
   const [pieces] = useState(() => Array.from({ length: 40 }, (_, i) => ({
     left: Math.random() * 100, size: 8 + Math.random() * 8,
@@ -119,6 +120,46 @@ function Confetti({ active }) {
   );
 }
 
+// ─── Avatar Picker ────────────────────────────────────────────────────────────
+function AvatarPicker({ selected, onSelect }) {
+  const categories = [...new Set(AVATARS.map(a => a.category))];
+  return (
+    <div>
+      {categories.map(cat => (
+        <div key={cat} style={{ marginBottom: 16 }}>
+          <div style={{ color: "rgba(255,255,255,0.5)", fontSize: 11, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 8 }}>{cat}</div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+            {AVATARS.filter(a => a.category === cat).map(a => (
+              <button key={a.id} onClick={() => onSelect(a.id)} style={{
+                background: selected === a.id ? `linear-gradient(135deg, ${a.color}44, ${a.color}22)` : "rgba(255,255,255,0.08)",
+                border: selected === a.id ? `2px solid ${a.color}` : "2px solid rgba(255,255,255,0.1)",
+                borderRadius: 14, padding: "12px 8px", cursor: "pointer",
+                display: "flex", flexDirection: "column", alignItems: "center", gap: 6,
+                transition: "all 0.2s",
+              }}>
+                <div style={{ fontSize: 36, background: a.bg, borderRadius: "50%", width: 56, height: 56, display: "flex", alignItems: "center", justifyContent: "center" }}>{a.emoji}</div>
+                <div style={{ color: selected === a.id ? "white" : "rgba(255,255,255,0.6)", fontSize: 12, fontWeight: "bold", textAlign: "center" }}>{a.label}</div>
+                {selected === a.id && <div style={{ fontSize: 10, color: a.color, fontWeight: "bold" }}>✓ Selected</div>}
+              </button>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ─── Avatar Display ───────────────────────────────────────────────────────────
+function AvatarDisplay({ avatarId, size = 48 }) {
+  const avatar = AVATARS.find(a => a.id === avatarId) || AVATARS[0];
+  return (
+    <div style={{ width: size, height: size, borderRadius: "50%", background: avatar.bg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: size * 0.55, border: `3px solid ${avatar.color}`, flexShrink: 0 }}>
+      {avatar.emoji}
+    </div>
+  );
+}
+
+// ─── Login Screen ─────────────────────────────────────────────────────────────
 function LoginScreen({ onLogin }) {
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
@@ -132,7 +173,7 @@ function LoginScreen({ onLogin }) {
       const { data, error } = await supabase.from("profiles").select("*").eq("family_code", c).single();
       if (error && error.code === "PGRST116") {
         const { data: newData, error: insertError } = await supabase.from("profiles")
-          .insert({ family_code: c, points: 0, log: [], prizes: DEFAULT_PRIZES, word_history: [], used_date: "" })
+          .insert({ family_code: c, points: 0, log: [], prizes: DEFAULT_PRIZES, word_history: [], used_date: "", kids: [] })
           .select().single();
         if (insertError) throw insertError;
         onLogin(c, newData);
@@ -150,11 +191,11 @@ function LoginScreen({ onLogin }) {
   return (
     <div style={{ minHeight: "100vh", background: "linear-gradient(160deg,#1a1a6e,#2d1b69 40%,#11998e 75%,#38ef7d)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
       <div style={{ background: "rgba(255,255,255,0.12)", borderRadius: 24, padding: 36, width: "100%", maxWidth: 380, textAlign: "center", border: "2px solid rgba(255,255,255,0.2)" }}>
-        <div style={{ fontSize: 56, marginBottom: 12 }}>⭐</div>
+        <div style={{ fontSize: 64, marginBottom: 8 }}>⭐</div>
         <h1 style={{ color: "white", fontWeight: "bold", fontSize: 32, marginBottom: 8 }}>SuperKid</h1>
         <p style={{ color: "rgba(255,255,255,0.6)", fontSize: 14, marginBottom: 28 }}>Enter your family code to get started. Share the same code across all your devices!</p>
         <input value={code} onChange={e => setCode(e.target.value.toUpperCase())} onKeyDown={e => e.key === "Enter" && handleLogin()}
-          placeholder="FAMILY CODE (e.g. RYAN)" maxLength={10}
+          placeholder="FAMILY CODE" maxLength={10}
           style={{ width: "100%", background: "rgba(255,255,255,0.15)", border: "2px solid rgba(255,255,255,0.3)", borderRadius: 14, padding: "14px 16px", color: "white", fontSize: 22, textAlign: "center", outline: "none", letterSpacing: 4, fontWeight: "bold", marginBottom: 12 }} />
         {error && <p style={{ color: "#FF6B6B", fontSize: 13, marginBottom: 10 }}>{error}</p>}
         <button onClick={handleLogin} disabled={loading} style={{ width: "100%", background: "linear-gradient(135deg,#FF6B6B,#FF8E53)", border: "none", borderRadius: 14, padding: "16px", color: "white", fontWeight: "bold", fontSize: 20, cursor: "pointer" }}>
@@ -166,7 +207,49 @@ function LoginScreen({ onLogin }) {
   );
 }
 
-function WordTab({ w, onUsed, used }) {
+// ─── Add Kid Screen ───────────────────────────────────────────────────────────
+function AddKidScreen({ onSave, onCancel, existing }) {
+  const [name, setName] = useState(existing?.name || "");
+  const [age, setAge] = useState(existing?.age || "");
+  const [avatarId, setAvatarId] = useState(existing?.avatarId || "lion");
+
+  function handleSave() {
+    if (!name.trim()) return;
+    onSave({ name: name.trim(), age: parseInt(age) || 5, avatarId });
+  }
+
+  return (
+    <div style={{ minHeight: "100vh", background: "linear-gradient(160deg,#1a1a6e,#2d1b69 40%,#11998e 75%,#38ef7d)", padding: "24px 16px 40px" }}>
+      <div style={{ maxWidth: 460, margin: "0 auto" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 24 }}>
+          <button onClick={onCancel} style={{ background: "rgba(255,255,255,0.15)", border: "none", borderRadius: 10, padding: "8px 14px", color: "white", fontSize: 16, cursor: "pointer" }}>← Back</button>
+          <div style={{ color: "white", fontWeight: "bold", fontSize: 20 }}>{existing ? "Edit Kid" : "Add a Kid"}</div>
+        </div>
+
+        <div style={{ background: "rgba(255,255,255,0.12)", borderRadius: 20, padding: 20, marginBottom: 16, border: "2px solid rgba(255,255,255,0.2)" }}>
+          <div style={{ color: "rgba(255,255,255,0.6)", fontSize: 12, marginBottom: 8, textTransform: "uppercase", letterSpacing: 1 }}>Name</div>
+          <input value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Crew"
+            style={{ width: "100%", background: "rgba(255,255,255,0.1)", border: "2px solid rgba(255,255,255,0.2)", borderRadius: 12, padding: "12px 14px", color: "white", fontSize: 18, outline: "none", marginBottom: 14 }} />
+          <div style={{ color: "rgba(255,255,255,0.6)", fontSize: 12, marginBottom: 8, textTransform: "uppercase", letterSpacing: 1 }}>Age</div>
+          <input type="number" value={age} onChange={e => setAge(e.target.value)} placeholder="5"
+            style={{ width: "100%", background: "rgba(255,255,255,0.1)", border: "2px solid rgba(255,255,255,0.2)", borderRadius: 12, padding: "12px 14px", color: "white", fontSize: 18, outline: "none" }} />
+        </div>
+
+        <div style={{ background: "rgba(255,255,255,0.12)", borderRadius: 20, padding: 20, marginBottom: 20, border: "2px solid rgba(255,255,255,0.2)" }}>
+          <div style={{ color: "rgba(255,255,255,0.6)", fontSize: 12, marginBottom: 14, textTransform: "uppercase", letterSpacing: 1 }}>Choose Avatar</div>
+          <AvatarPicker selected={avatarId} onSelect={setAvatarId} />
+        </div>
+
+        <button onClick={handleSave} style={{ width: "100%", background: "linear-gradient(135deg,#FF6B6B,#FF8E53)", border: "none", borderRadius: 14, padding: "16px", color: "white", fontWeight: "bold", fontSize: 20, cursor: "pointer" }}>
+          {existing ? "Save Changes ✓" : "Add to Family! 🎉"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ─── Word Tab ─────────────────────────────────────────────────────────────────
+function WordTab({ w, onUsed, used, kidName }) {
   return (
     <div style={{ background: "rgba(255,255,255,0.11)", borderRadius: 22, padding: 20, border: "2px solid rgba(255,255,255,0.2)" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 14 }}>
@@ -185,24 +268,25 @@ function WordTab({ w, onUsed, used }) {
       ))}
       {used
         ? <div style={{ background: "linear-gradient(135deg,#96CEB4,#4ECDC4)", borderRadius: 13, padding: "13px 18px", textAlign: "center", marginTop: 6 }}>
-            <span style={{ color: "white", fontWeight: "bold", fontSize: 17 }}>🎉 He used it today! +2 pts!</span>
+            <span style={{ color: "white", fontWeight: "bold", fontSize: 17 }}>🎉 {kidName} used it today! +2 pts!</span>
           </div>
         : <button onClick={onUsed} style={{ width: "100%", background: "linear-gradient(135deg,#FF6B6B,#FF8E53)", border: "none", borderRadius: 13, padding: "15px 20px", color: "white", fontWeight: "bold", fontSize: 18, cursor: "pointer", marginTop: 6 }}>
-            🗣️ Used it in a sentence! +2 pts
+            🗣️ {kidName} used it in a sentence! +2 pts
           </button>
       }
     </div>
   );
 }
 
-function PointsTab({ log, onAdd }) {
+// ─── Points Tab ───────────────────────────────────────────────────────────────
+function PointsTab({ log, onAdd, soundEnabled, kidName }) {
   const [reason, setReason] = useState("");
   const [amt, setAmt] = useState(1);
   return (
     <div>
       <div style={{ background: "rgba(255,255,255,0.1)", borderRadius: 20, padding: 18, border: "2px solid rgba(255,255,255,0.18)", marginBottom: 13 }}>
         <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", textTransform: "uppercase", letterSpacing: 1, textAlign: "center", marginBottom: 12 }}>PARENT CONTROLS</div>
-        <input value={reason} onChange={e => setReason(e.target.value)} placeholder="Reason (e.g. helped set the table)"
+        <input value={reason} onChange={e => setReason(e.target.value)} placeholder={`Reason (e.g. ${kidName} helped set the table)`}
           style={{ width: "100%", background: "rgba(255,255,255,0.1)", border: "2px solid rgba(255,255,255,0.18)", borderRadius: 11, padding: "10px 12px", color: "white", fontSize: 14, outline: "none", marginBottom: 10 }} />
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 13 }}>
           <div style={{ flex: 1, display: "flex", alignItems: "center", background: "rgba(255,255,255,0.1)", border: "2px solid rgba(255,255,255,0.18)", borderRadius: 11, overflow: "hidden" }}>
@@ -213,9 +297,9 @@ function PointsTab({ log, onAdd }) {
           <span style={{ fontSize: 12, color: "rgba(255,255,255,0.4)" }}>pts</span>
         </div>
         <div style={{ display: "flex", gap: 9 }}>
-          <button onClick={() => { onAdd(amt, reason.trim() || "Good behavior 🌟"); setReason(""); }}
+          <button onClick={() => { onAdd(amt, reason.trim() || "Good behavior 🌟", soundEnabled); setReason(""); }}
             style={{ flex: 1, background: "linear-gradient(135deg,#2ecc71,#27ae60)", border: "none", borderRadius: 12, padding: "14px 0", color: "white", fontWeight: "bold", fontSize: 17, cursor: "pointer" }}>✅ Award</button>
-          <button onClick={() => { onAdd(-amt, reason.trim() || "Behavior reminder"); setReason(""); }}
+          <button onClick={() => { onAdd(-amt, reason.trim() || "Behavior reminder", soundEnabled); setReason(""); }}
             style={{ flex: 1, background: "linear-gradient(135deg,#e74c3c,#c0392b)", border: "none", borderRadius: 12, padding: "14px 0", color: "white", fontWeight: "bold", fontSize: 17, cursor: "pointer" }}>❌ Deduct</button>
         </div>
       </div>
@@ -238,6 +322,7 @@ function PointsTab({ log, onAdd }) {
   );
 }
 
+// ─── Prizes Tab ───────────────────────────────────────────────────────────────
 function PrizesTab({ pts, prizes, onSave, onRedeem }) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(prizes);
@@ -273,12 +358,7 @@ function PrizesTab({ pts, prizes, onSave, onRedeem }) {
               <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)" }}>{p.cost} pts needed</div>
             </div>
             {ok ? (
-              <button onClick={() => onRedeem(p)} style={{
-                background: "linear-gradient(135deg,#FFD700,#FFA500)",
-                border: "none", borderRadius: 10, padding: "8px 14px",
-                color: "white", fontWeight: "bold", fontSize: 13,
-                cursor: "pointer", boxShadow: "0 2px 8px rgba(255,165,0,0.4)",
-              }}>🎁 Redeem</button>
+              <button onClick={() => onRedeem(p)} style={{ background: "linear-gradient(135deg,#FFD700,#FFA500)", border: "none", borderRadius: 10, padding: "8px 14px", color: "white", fontWeight: "bold", fontSize: 13, cursor: "pointer", boxShadow: "0 2px 8px rgba(255,165,0,0.4)" }}>🎁 Redeem</button>
             ) : (
               <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)" }}>{p.cost - pts} to go</div>
             )}
@@ -304,6 +384,7 @@ function PrizesTab({ pts, prizes, onSave, onRedeem }) {
   );
 }
 
+// ─── History Tab ──────────────────────────────────────────────────────────────
 function HistoryTab({ history }) {
   if (!history.length) return (
     <div style={{ textAlign: "center", padding: 36 }}>
@@ -325,53 +406,178 @@ function HistoryTab({ history }) {
   );
 }
 
+// ─── Settings Tab ─────────────────────────────────────────────────────────────
+function SettingsTab({ familyCode, soundEnabled, onToggleSound, kids, activeKidId, onAddKid, onEditKid, onSwitchKid, onSignOut }) {
+  return (
+    <div>
+      {/* Kids profiles */}
+      <div style={{ background: "rgba(255,255,255,0.1)", borderRadius: 20, padding: 18, border: "2px solid rgba(255,255,255,0.18)", marginBottom: 14 }}>
+        <div style={{ fontSize: 15, color: "white", fontWeight: "bold", marginBottom: 14 }}>👨‍👩‍👧‍👦 Kids Profiles</div>
+        {kids.map(kid => (
+          <div key={kid.id} style={{ display: "flex", alignItems: "center", gap: 12, background: kid.id === activeKidId ? "rgba(255,215,0,0.15)" : "rgba(255,255,255,0.07)", borderRadius: 14, padding: "12px 14px", marginBottom: 8, border: kid.id === activeKidId ? "2px solid rgba(255,215,0,0.4)" : "2px solid transparent" }}>
+            <AvatarDisplay avatarId={kid.avatarId} size={44} />
+            <div style={{ flex: 1 }}>
+              <div style={{ color: "white", fontWeight: "bold", fontSize: 15 }}>{kid.name}</div>
+              <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 12 }}>Age {kid.age} · {kid.points || 0} pts</div>
+            </div>
+            {kid.id === activeKidId
+              ? <div style={{ color: "#FFD700", fontSize: 12, fontWeight: "bold" }}>Active ✓</div>
+              : <button onClick={() => onSwitchKid(kid.id)} style={{ background: "rgba(255,255,255,0.15)", border: "none", borderRadius: 8, padding: "6px 12px", color: "white", fontSize: 12, cursor: "pointer" }}>Switch</button>
+            }
+            <button onClick={() => onEditKid(kid)} style={{ background: "rgba(255,255,255,0.1)", border: "none", borderRadius: 8, padding: "6px 10px", color: "rgba(255,255,255,0.5)", fontSize: 12, cursor: "pointer" }}>✏️</button>
+          </div>
+        ))}
+        <button onClick={onAddKid} style={{ width: "100%", background: "linear-gradient(135deg,#4ECDC4,#45B7D1)", border: "none", borderRadius: 12, padding: "12px 0", color: "white", fontWeight: "bold", fontSize: 15, cursor: "pointer", marginTop: 4 }}>
+          + Add Another Kid
+        </button>
+      </div>
+
+      {/* Sound */}
+      <div style={{ background: "rgba(255,255,255,0.1)", borderRadius: 20, padding: 18, border: "2px solid rgba(255,255,255,0.18)", marginBottom: 14 }}>
+        <div style={{ fontSize: 15, color: "white", fontWeight: "bold", marginBottom: 14 }}>🔊 Sound & Notifications</div>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div>
+            <div style={{ color: "white", fontSize: 14 }}>Sound Effects</div>
+            <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 12 }}>Award, deduct & redeem sounds</div>
+          </div>
+          <button onClick={onToggleSound} style={{
+            width: 52, height: 30, borderRadius: 15, border: "none", cursor: "pointer",
+            background: soundEnabled ? "linear-gradient(135deg,#2ecc71,#27ae60)" : "rgba(255,255,255,0.2)",
+            position: "relative", transition: "background 0.3s",
+          }}>
+            <div style={{ position: "absolute", top: 3, left: soundEnabled ? 24 : 3, width: 24, height: 24, borderRadius: "50%", background: "white", transition: "left 0.3s", boxShadow: "0 2px 4px rgba(0,0,0,0.3)" }} />
+          </button>
+        </div>
+      </div>
+
+      {/* Family Code */}
+      <div style={{ background: "rgba(255,255,255,0.1)", borderRadius: 20, padding: 18, border: "2px solid rgba(255,255,255,0.18)", marginBottom: 14 }}>
+        <div style={{ fontSize: 15, color: "white", fontWeight: "bold", marginBottom: 8 }}>🔑 Family Code</div>
+        <div style={{ background: "rgba(255,255,255,0.1)", borderRadius: 12, padding: "12px 16px", textAlign: "center" }}>
+          <div style={{ color: "#FFD700", fontSize: 28, fontWeight: "bold", letterSpacing: 6 }}>{familyCode}</div>
+          <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 11, marginTop: 4 }}>Share this code with your partner to sync devices</div>
+        </div>
+      </div>
+
+      {/* Sign out */}
+      <button onClick={onSignOut} style={{ width: "100%", background: "rgba(231,76,60,0.2)", border: "2px solid rgba(231,76,60,0.3)", borderRadius: 14, padding: "13px", color: "#e74c3c", fontWeight: "bold", fontSize: 15, cursor: "pointer" }}>
+        Sign Out
+      </button>
+    </div>
+  );
+}
+
+// ─── App ──────────────────────────────────────────────────────────────────────
 export default function App() {
   const today = new Date().toDateString();
   const w = getTodayWord();
 
   const [familyCode, setFamilyCode] = useState(() => localStorage.getItem("sk_code") || "");
   const [profile, setProfile] = useState(null);
+  const [kids, setKids] = useState([]);
+  const [activeKidId, setActiveKidId] = useState(() => localStorage.getItem("sk_kid") || "");
   const [pts, setPts] = useState(0);
   const [log, setLog] = useState([]);
   const [used, setUsed] = useState(false);
   const [history, setHistory] = useState([]);
   const [prizes, setPrizes] = useState(DEFAULT_PRIZES);
+  const [soundEnabled, setSoundEnabled] = useState(() => localStorage.getItem("sk_sound") !== "false");
   const [confetti, setConfetti] = useState(false);
   const [tab, setTab] = useState("word");
   const [saving, setSaving] = useState(false);
+  const [showAddKid, setShowAddKid] = useState(false);
+  const [editingKid, setEditingKid] = useState(null);
 
   useEffect(() => { if (familyCode) loadProfile(familyCode); }, []);
+
+  const activeKid = kids.find(k => k.id === activeKidId) || kids[0];
 
   async function loadProfile(code) {
     const { data } = await supabase.from("profiles").select("*").eq("family_code", code).single();
     if (data) {
-      setProfile(data); setPts(data.points || 0); setLog(data.log || []);
-      setHistory(data.word_history || []); setPrizes(data.prizes || DEFAULT_PRIZES);
-      setUsed(data.used_date === today);
+      setProfile(data);
+      const kidsData = data.kids || [];
+      setKids(kidsData);
+      const kidId = localStorage.getItem("sk_kid") || kidsData[0]?.id || "";
+      setActiveKidId(kidId);
+      const kid = kidsData.find(k => k.id === kidId) || kidsData[0];
+      if (kid) {
+        setPts(kid.points || 0);
+        setLog(kid.log || []);
+        setHistory(kid.word_history || []);
+        setPrizes(kid.prizes || DEFAULT_PRIZES);
+        setUsed(kid.used_date === today);
+      }
+      if (kidsData.length === 0) setShowAddKid(true);
     }
   }
 
-  async function saveProfile(updates) {
+  async function saveKids(updatedKids) {
     setSaving(true);
-    await supabase.from("profiles").update(updates).eq("family_code", familyCode);
+    await supabase.from("profiles").update({ kids: updatedKids }).eq("family_code", familyCode);
+    setKids(updatedKids);
     setSaving(false);
   }
 
   function handleLogin(code, data) {
     localStorage.setItem("sk_code", code);
-    setFamilyCode(code); setProfile(data); setPts(data.points || 0);
-    setLog(data.log || []); setHistory(data.word_history || []);
-    setPrizes(data.prizes || DEFAULT_PRIZES); setUsed(data.used_date === today);
+    setFamilyCode(code); setProfile(data);
+    const kidsData = data.kids || [];
+    setKids(kidsData);
+    if (kidsData.length === 0) { setShowAddKid(true); return; }
+    const kid = kidsData[0];
+    setActiveKidId(kid.id);
+    localStorage.setItem("sk_kid", kid.id);
+    setPts(kid.points || 0); setLog(kid.log || []);
+    setHistory(kid.word_history || []); setPrizes(kid.prizes || DEFAULT_PRIZES);
+    setUsed(kid.used_date === today);
   }
 
-  async function addPoints(delta, reason) {
+  async function handleAddKid(kidData) {
+    const newKid = { ...kidData, id: Date.now() + "", points: 0, log: [], word_history: [], prizes: DEFAULT_PRIZES, used_date: "" };
+    const updatedKids = [...kids, newKid];
+    await saveKids(updatedKids);
+    setActiveKidId(newKid.id);
+    localStorage.setItem("sk_kid", newKid.id);
+    setPts(0); setLog([]); setHistory([]); setPrizes(DEFAULT_PRIZES); setUsed(false);
+    setShowAddKid(false);
+  }
+
+  async function handleEditKid(kidData) {
+    const updatedKids = kids.map(k => k.id === editingKid.id ? { ...k, ...kidData } : k);
+    await saveKids(updatedKids);
+    setEditingKid(null);
+  }
+
+  function handleSwitchKid(kidId) {
+    const kid = kids.find(k => k.id === kidId);
+    if (!kid) return;
+    setActiveKidId(kidId);
+    localStorage.setItem("sk_kid", kidId);
+    setPts(kid.points || 0); setLog(kid.log || []);
+    setHistory(kid.word_history || []); setPrizes(kid.prizes || DEFAULT_PRIZES);
+    setUsed(kid.used_date === today);
+    setTab("word");
+  }
+
+  async function updateActiveKid(updates) {
+    setSaving(true);
+    const updatedKids = kids.map(k => k.id === activeKidId ? { ...k, ...updates } : k);
+    await supabase.from("profiles").update({ kids: updatedKids }).eq("family_code", familyCode);
+    setKids(updatedKids);
+    setSaving(false);
+  }
+
+  async function addPoints(delta, reason, withSound = true) {
     const next = Math.max(0, pts + delta);
     const entry = { delta, reason, d: new Date().toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) };
     const newLog = [entry, ...log];
     setPts(next); setLog(newLog);
-    await saveProfile({ points: next, log: newLog });
-    if (delta > 0) { playSound("award"); setConfetti(true); setTimeout(() => setConfetti(false), 2000); }
-    else { playSound("deduct"); }
+    await updateActiveKid({ points: next, log: newLog });
+    if (withSound && soundEnabled) {
+      if (delta > 0) { playSound("award"); setConfetti(true); setTimeout(() => setConfetti(false), 2000); }
+      else { playSound("deduct"); }
+    } else if (delta > 0) { setConfetti(true); setTimeout(() => setConfetti(false), 2000); }
   }
 
   async function handleWordUsed() {
@@ -380,13 +586,14 @@ export default function App() {
     const newLog = [entry, ...log];
     const newHistory = [{ word: w.word, emoji: w.emoji, used: true }, ...history.filter(x => x.word !== w.word)];
     setPts(next); setLog(newLog); setUsed(true); setHistory(newHistory);
-    await saveProfile({ points: next, log: newLog, word_history: newHistory, used_date: today });
-    playSound("award"); setConfetti(true); setTimeout(() => setConfetti(false), 2000);
+    await updateActiveKid({ points: next, log: newLog, word_history: newHistory, used_date: today });
+    if (soundEnabled) playSound("award");
+    setConfetti(true); setTimeout(() => setConfetti(false), 2000);
   }
 
   async function handleSavePrizes(p) {
     setPrizes(p);
-    await saveProfile({ prizes: p });
+    await updateActiveKid({ prizes: p });
   }
 
   async function handleRedeem(prize) {
@@ -394,13 +601,34 @@ export default function App() {
     const entry = { delta: -prize.cost, reason: `🎁 Redeemed: ${prize.label}`, d: new Date().toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) };
     const newLog = [entry, ...log];
     setPts(next); setLog(newLog);
-    await saveProfile({ points: next, log: newLog });
-    playSound("redeem"); setConfetti(true); setTimeout(() => setConfetti(false), 2500);
+    await updateActiveKid({ points: next, log: newLog });
+    if (soundEnabled) playSound("redeem");
+    setConfetti(true); setTimeout(() => setConfetti(false), 2500);
+  }
+
+  function handleToggleSound() {
+    const next = !soundEnabled;
+    setSoundEnabled(next);
+    localStorage.setItem("sk_sound", next.toString());
+  }
+
+  function handleSignOut() {
+    localStorage.removeItem("sk_code");
+    localStorage.removeItem("sk_kid");
+    setFamilyCode(""); setProfile(null); setKids([]);
   }
 
   if (!familyCode || !profile) return <LoginScreen onLogin={handleLogin} />;
+  if (showAddKid) return <AddKidScreen onSave={handleAddKid} onCancel={() => kids.length > 0 && setShowAddKid(false)} existing={null} />;
+  if (editingKid) return <AddKidScreen onSave={handleEditKid} onCancel={() => setEditingKid(null)} existing={editingKid} />;
 
-  const TABS = [{ id: "word", label: "📖 Word" }, { id: "points", label: "⭐ Points" }, { id: "prizes", label: "🎁 Prizes" }, { id: "history", label: "📚 Words" }];
+  const TABS = [
+    { id: "word",     label: "📖", title: "Word" },
+    { id: "points",   label: "⭐", title: "Points" },
+    { id: "prizes",   label: "🎁", title: "Prizes" },
+    { id: "history",  label: "📚", title: "Words" },
+    { id: "settings", label: "⚙️", title: "Settings" },
+  ];
 
   return (
     <>
@@ -412,32 +640,47 @@ export default function App() {
         @keyframes fall { to { transform: translateY(110vh) rotate(720deg); opacity: 0; } }
       `}</style>
       <Confetti active={confetti} />
-      <div style={{ paddingBottom: 40 }}>
-        <div style={{ padding: "22px 16px 14px", textAlign: "center", background: "rgba(0,0,0,0.15)", marginBottom: 14 }}>
-          <div style={{ fontSize: 28, color: "white", fontWeight: "bold" }}>⭐ SuperKid</div>
-          <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", marginTop: 2 }}>Family code: {familyCode} {saving && "· saving..."}</div>
-        </div>
-        <div style={{ maxWidth: 460, margin: "0 auto", padding: "0 13px" }}>
-          <div style={{ background: "rgba(255,255,255,0.15)", borderRadius: 18, padding: "12px 18px", marginBottom: 12, display: "flex", alignItems: "center", gap: 10 }}>
-            <div style={{ fontSize: 32 }}>⭐</div>
-            <div>
-              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", textTransform: "uppercase", letterSpacing: 1 }}>Total Points</div>
-              <div style={{ fontSize: 32, color: "#FFD700", fontWeight: "bold", lineHeight: 1 }}>{pts}</div>
+      <div style={{ paddingBottom: 80 }}>
+        {/* Header */}
+        <div style={{ padding: "18px 16px 14px", background: "rgba(0,0,0,0.2)", marginBottom: 14 }}>
+          <div style={{ maxWidth: 460, margin: "0 auto", display: "flex", alignItems: "center", gap: 12 }}>
+            {activeKid && <AvatarDisplay avatarId={activeKid.avatarId} size={44} />}
+            <div style={{ flex: 1 }}>
+              <div style={{ color: "white", fontWeight: "bold", fontSize: 18 }}>
+                {activeKid ? `${activeKid.name}'s SuperKid` : "SuperKid"}
+              </div>
+              <div style={{ color: "rgba(255,255,255,0.5)", fontSize: 11 }}>
+                {new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
+                {saving && " · saving..."}
+              </div>
             </div>
-            <button onClick={() => { localStorage.removeItem("sk_code"); setFamilyCode(""); setProfile(null); }}
-              style={{ marginLeft: "auto", background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.2)", borderRadius: 8, padding: "5px 10px", color: "rgba(255,255,255,0.5)", fontSize: 11, cursor: "pointer" }}>
-              Switch
+            <div style={{ background: "rgba(255,255,255,0.15)", borderRadius: 12, padding: "6px 14px", textAlign: "center" }}>
+              <div style={{ color: "#FFD700", fontWeight: "bold", fontSize: 22, lineHeight: 1 }}>{pts}</div>
+              <div style={{ color: "rgba(255,255,255,0.5)", fontSize: 9, textTransform: "uppercase", letterSpacing: 1 }}>points</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Content */}
+        <div style={{ maxWidth: 460, margin: "0 auto", padding: "0 13px" }}>
+          {tab === "word"     && <WordTab     w={w} onUsed={handleWordUsed} used={used} kidName={activeKid?.name || "He"} />}
+          {tab === "points"   && <PointsTab   log={log} onAdd={addPoints} soundEnabled={soundEnabled} kidName={activeKid?.name || "Kid"} />}
+          {tab === "prizes"   && <PrizesTab   pts={pts} prizes={prizes} onSave={handleSavePrizes} onRedeem={handleRedeem} />}
+          {tab === "history"  && <HistoryTab  history={history} />}
+          {tab === "settings" && <SettingsTab familyCode={familyCode} soundEnabled={soundEnabled} onToggleSound={handleToggleSound} kids={kids} activeKidId={activeKidId} onAddKid={() => setShowAddKid(true)} onEditKid={k => setEditingKid(k)} onSwitchKid={handleSwitchKid} onSignOut={handleSignOut} />}
+        </div>
+      </div>
+
+      {/* Bottom Nav */}
+      <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, background: "rgba(15,15,40,0.95)", backdropFilter: "blur(20px)", borderTop: "1px solid rgba(255,255,255,0.1)", padding: "8px 0 12px", zIndex: 100 }}>
+        <div style={{ maxWidth: 460, margin: "0 auto", display: "flex", justifyContent: "space-around" }}>
+          {TABS.map(t => (
+            <button key={t.id} onClick={() => setTab(t.id)} style={{ background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 3, padding: "4px 12px", borderRadius: 12, transition: "all 0.2s" }}>
+              <div style={{ fontSize: 22, filter: tab === t.id ? "none" : "grayscale(60%) opacity(0.6)" }}>{t.label}</div>
+              <div style={{ fontSize: 10, color: tab === t.id ? "#FFD700" : "rgba(255,255,255,0.4)", fontWeight: tab === t.id ? "bold" : "normal", letterSpacing: 0.5 }}>{t.title}</div>
+              {tab === t.id && <div style={{ width: 4, height: 4, borderRadius: "50%", background: "#FFD700" }} />}
             </button>
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 5, marginBottom: 14 }}>
-            {TABS.map(t => (
-              <button key={t.id} onClick={() => setTab(t.id)} style={{ padding: "8px 0", background: tab === t.id ? "rgba(255,255,255,0.22)" : "rgba(255,255,255,0.07)", border: tab === t.id ? "2px solid rgba(255,255,255,0.35)" : "2px solid transparent", borderRadius: 10, color: "white", fontWeight: "bold", fontSize: 11, cursor: "pointer" }}>{t.label}</button>
-            ))}
-          </div>
-          {tab === "word"    && <WordTab    w={w} onUsed={handleWordUsed} used={used} />}
-          {tab === "points"  && <PointsTab  log={log} onAdd={addPoints} />}
-          {tab === "prizes"  && <PrizesTab  pts={pts} prizes={prizes} onSave={handleSavePrizes} onRedeem={handleRedeem} />}
-          {tab === "history" && <HistoryTab history={history} />}
+          ))}
         </div>
       </div>
     </>
