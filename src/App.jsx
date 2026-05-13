@@ -40,7 +40,34 @@ const AVATARS = [
   { id: "explorer",  label: "Super Explorer", category: "Super Adventure",  emoji: "🗺️", color: "#4E342E", bg: "#EFEBE9" },
   { id: "pirate",    label: "Super Pirate",   category: "Super Adventure",  emoji: "🏴‍☠️", color: "#212121", bg: "#F5F5F5" },
 ];
+const DAILY_EXTRAS = [
+  { joke: { setup: "Why did the scarecrow win an award?", punchline: "Because he was outstanding in his field! 🌾" }, fact: "A group of flamingos is called a flamboyance! 🦩" },
+  { joke: { setup: "Why can't Elsa have a balloon?", punchline: "Because she'll let it go! ❄️" }, fact: "Honey never spoils — archaeologists found 3,000 year old honey in Egyptian tombs and it was still good! 🍯" },
+  { joke: { setup: "What do you call a fish without eyes?", punchline: "A fsh! 🐟" }, fact: "Butterflies taste with their feet! They have taste sensors on their legs. 🦋" },
+  { joke: { setup: "Why did the bicycle fall over?", punchline: "Because it was two-tired! 🚲" }, fact: "A snail can sleep for 3 years! 🐌" },
+  { joke: { setup: "What do elves learn in school?", punchline: "The elf-abet! 🧝" }, fact: "Octopuses have three hearts and blue blood! 🐙" },
+  { joke: { setup: "Why don't scientists trust atoms?", punchline: "Because they make up everything! ⚛️" }, fact: "A day on Venus is longer than a year on Venus! It spins so slowly. 🪐" },
+  { joke: { setup: "What do you call a sleeping dinosaur?", punchline: "A dino-snore! 🦕" }, fact: "Cows have best friends and get stressed when separated from them! 🐄" },
+  { joke: { setup: "Why did the math book look so sad?", punchline: "Because it had too many problems! 📚" }, fact: "Sharks are older than trees — they've been around for 450 million years! 🦈" },
+  { joke: { setup: "What do you call cheese that isn't yours?", punchline: "Nacho cheese! 🧀" }, fact: "A group of owls is called a parliament! 🦉" },
+  { joke: { setup: "Why did the teddy bear say no to dessert?", punchline: "Because she was already stuffed! 🧸" }, fact: "Sea otters hold hands while sleeping so they don't drift apart! 🦦" },
+  { joke: { setup: "What did the ocean say to the beach?", punchline: "Nothing, it just waved! 🌊" }, fact: "Elephants are the only animals that can't jump! 🐘" },
+  { joke: { setup: "Why do bees have sticky hair?", punchline: "Because they use a honeycomb! 🐝" }, fact: "A bolt of lightning is five times hotter than the surface of the sun! ⚡" },
+  { joke: { setup: "What do you call a bear with no teeth?", punchline: "A gummy bear! 🐻" }, fact: "Wombats are the only animals that produce cube-shaped poop! 🐨" },
+  { joke: { setup: "Why can't you give Elsa a balloon?", punchline: "She'll just let it go! 🎈" }, fact: "The Eiffel Tower grows 6 inches taller in summer because the metal expands in heat! 🗼" },
+  { joke: { setup: "What do you call a magic dog?", punchline: "A labracadabrador! 🐕" }, fact: "Penguins propose to their mates with a pebble! 🐧" },
+  { joke: { setup: "Why did the cookie go to the doctor?", punchline: "Because it was feeling crummy! 🍪" }, fact: "A group of cats is called a clowder! 🐱" },
+  { joke: { setup: "What has ears but cannot hear?", punchline: "A cornfield! 🌽" }, fact: "Trees can communicate with each other through underground fungus networks! 🌳" },
+  { joke: { setup: "Why did the superhero flush the toilet?", punchline: "Because it was his doody! 🦸" }, fact: "A shrimp's heart is in its head! 🦐" },
+  { joke: { setup: "What do you call a lazy kangaroo?", punchline: "A pouch potato! 🦘" }, fact: "Polar bears have black skin under their white fur to absorb heat from the sun! 🐻‍❄️" },
+  { joke: { setup: "Why did the golfer bring extra socks?", punchline: "In case he got a hole in one! ⛳" }, fact: "A group of pandas is called an embarrassment! 🐼" },
+];
 
+function getTodayExtras() {
+  const now = new Date();
+  const day = Math.floor((now - new Date(now.getFullYear(), 0, 0)) / 86400000);
+  return DAILY_EXTRAS[day % DAILY_EXTRAS.length];
+}
 const DEFAULT_PRIZES = [
   { id: "1", emoji: "🍦", label: "Ice Cream Trip", cost: 10 },
   { id: "2", emoji: "🎮", label: "30 Min Extra Screen Time", cost: 15 },
@@ -424,6 +451,103 @@ function PrizesTab({ pts, prizes, onSave, onRedeem }) {
 }
 
 // ─── History Tab ──────────────────────────────────────────────────────────────
+function ExtrasTab({ onEarn, jokeShared, factShared, kidName }) {
+  const [showPunchline, setShowPunchline] = useState(false);
+  const extras = getTodayExtras();
+
+  return (
+    <div>
+      {/* Joke Card */}
+      <div style={{
+        background: "rgba(255,255,255,0.11)", borderRadius: 22, padding: 22,
+        border: "2px solid rgba(255,255,255,0.2)", marginBottom: 16,
+        boxShadow: "0 8px 32px rgba(0,0,0,0.15)",
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
+          <div style={{ fontSize: 36, background: "rgba(255,220,0,0.15)", borderRadius: "50%", width: 56, height: 56, display: "flex", alignItems: "center", justifyContent: "center" }}>😄</div>
+          <div>
+            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.45)", textTransform: "uppercase", letterSpacing: 2 }}>Joke of the Day</div>
+            <div style={{ fontSize: 18, color: "white", fontWeight: "bold" }}>Make someone laugh!</div>
+          </div>
+        </div>
+
+        <div style={{ background: "rgba(255,255,255,0.09)", borderRadius: 14, padding: "14px 16px", marginBottom: 12 }}>
+          <p style={{ color: "white", fontSize: 16, margin: 0, lineHeight: 1.5, fontWeight: "600" }}>
+            {extras.joke.setup}
+          </p>
+        </div>
+
+        {!showPunchline ? (
+          <button onClick={() => setShowPunchline(true)} style={{
+            width: "100%", background: "linear-gradient(135deg,#FFD700,#FFA500)",
+            border: "none", borderRadius: 13, padding: "13px 20px",
+            color: "white", fontWeight: "bold", fontSize: 16, cursor: "pointer",
+            boxShadow: "0 4px 16px rgba(255,165,0,0.3)",
+          }}>
+            🥁 Tap for the Punchline!
+          </button>
+        ) : (
+          <div>
+            <div style={{ background: "linear-gradient(135deg,rgba(255,215,0,0.2),rgba(255,165,0,0.1))", borderRadius: 14, padding: "14px 16px", marginBottom: 12, border: "2px solid rgba(255,215,0,0.3)" }}>
+              <p style={{ color: "#FFD700", fontSize: 16, margin: 0, lineHeight: 1.5, fontWeight: "bold", textAlign: "center" }}>
+                {extras.joke.punchline}
+              </p>
+            </div>
+            {jokeShared ? (
+              <div style={{ background: "linear-gradient(135deg,#96CEB4,#4ECDC4)", borderRadius: 13, padding: "12px 18px", textAlign: "center" }}>
+                <span style={{ color: "white", fontWeight: "bold", fontSize: 15 }}>🎉 {kidName} told the joke! +1 pt earned!</span>
+              </div>
+            ) : (
+              <button onClick={() => onEarn("joke")} style={{
+                width: "100%", background: "linear-gradient(135deg,#FF6B6B,#FF8E53)",
+                border: "none", borderRadius: 13, padding: "13px 20px",
+                color: "white", fontWeight: "bold", fontSize: 16, cursor: "pointer",
+              }}>
+                🗣️ {kidName} told someone the joke! +1 pt
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Fun Fact Card */}
+      <div style={{
+        background: "rgba(255,255,255,0.11)", borderRadius: 22, padding: 22,
+        border: "2px solid rgba(255,255,255,0.2)",
+        boxShadow: "0 8px 32px rgba(0,0,0,0.15)",
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
+          <div style={{ fontSize: 36, background: "rgba(78,205,196,0.15)", borderRadius: "50%", width: 56, height: 56, display: "flex", alignItems: "center", justifyContent: "center" }}>🌍</div>
+          <div>
+            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.45)", textTransform: "uppercase", letterSpacing: 2 }}>Fun Fact of the Day</div>
+            <div style={{ fontSize: 18, color: "white", fontWeight: "bold" }}>Did you know?</div>
+          </div>
+        </div>
+
+        <div style={{ background: "rgba(78,205,196,0.1)", borderRadius: 14, padding: "16px 16px", marginBottom: 12, border: "1px solid rgba(78,205,196,0.2)" }}>
+          <p style={{ color: "white", fontSize: 16, margin: 0, lineHeight: 1.6, textAlign: "center" }}>
+            {extras.fact}
+          </p>
+        </div>
+
+        {factShared ? (
+          <div style={{ background: "linear-gradient(135deg,#96CEB4,#4ECDC4)", borderRadius: 13, padding: "12px 18px", textAlign: "center" }}>
+            <span style={{ color: "white", fontWeight: "bold", fontSize: 15 }}>🎉 {kidName} shared the fact! +1 pt earned!</span>
+          </div>
+        ) : (
+          <button onClick={() => onEarn("fact")} style={{
+            width: "100%", background: "linear-gradient(135deg,#4ECDC4,#45B7D1)",
+            border: "none", borderRadius: 13, padding: "13px 20px",
+            color: "white", fontWeight: "bold", fontSize: 16, cursor: "pointer",
+            boxShadow: "0 4px 16px rgba(78,205,196,0.3)",
+          }}>
+            🗣️ {kidName} shared this fact! +1 pt
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
 function HistoryTab({ history }) {
   if (!history.length) return (
     <div style={{ textAlign: "center", padding: 36 }}>
@@ -518,6 +642,8 @@ export default function App() {
   const [pts, setPts] = useState(0);
   const [log, setLog] = useState([]);
   const [used, setUsed] = useState(false);
+  const [jokeShared, setJokeShared] = useState(false);
+const [factShared, setFactShared] = useState(false);
   const [history, setHistory] = useState([]);
   const [prizes, setPrizes] = useState(DEFAULT_PRIZES);
   const [soundEnabled, setSoundEnabled] = useState(() => localStorage.getItem("sk_sound") !== "false");
@@ -634,6 +760,11 @@ export default function App() {
     setPrizes(p);
     await updateActiveKid({ prizes: p });
   }
+  async function handleExtrasEarn(type) {
+  if (type === "joke") { setJokeShared(true); }
+  if (type === "fact") { setFactShared(true); }
+  await addPoints(1, type === "joke" ? "😄 Told today's joke!" : "🌍 Shared today's fun fact!");
+}
 async function handleEditLog(idx, updated) {
   let newLog;
   let newPts = pts;
@@ -678,13 +809,13 @@ async function handleEditLog(idx, updated) {
   if (showAddKid) return <AddKidScreen onSave={handleAddKid} onCancel={() => kids.length > 0 && setShowAddKid(false)} existing={null} />;
   if (editingKid) return <AddKidScreen onSave={handleEditKid} onCancel={() => setEditingKid(null)} existing={editingKid} />;
 
-  const TABS = [
-    { id: "word",     label: "📖", title: "Word" },
-    { id: "points",   label: "⭐", title: "Points" },
-    { id: "prizes",   label: "🎁", title: "Prizes" },
-    { id: "history",  label: "📚", title: "Words" },
-    { id: "settings", label: "⚙️", title: "Settings" },
-  ];
+const TABS = [
+  { id: "word",     label: "📖", title: "Word" },
+  { id: "extras",   label: "🎉", title: "Extras" },
+  { id: "points",   label: "⭐", title: "Points" },
+  { id: "prizes",   label: "🎁", title: "Prizes" },
+  { id: "settings", label: "⚙️", title: "Settings" },
+];
 
   return (
     <>
@@ -722,7 +853,8 @@ async function handleEditLog(idx, updated) {
           {tab === "word"     && <WordTab     w={w} onUsed={handleWordUsed} used={used} kidName={activeKid?.name || "He"} />}
           {tab === "points" && <PointsTab log={log} onAdd={addPoints} onEditLog={handleEditLog} soundEnabled={soundEnabled} kidName={activeKid?.name || "Kid"} />}
           {tab === "prizes"   && <PrizesTab   pts={pts} prizes={prizes} onSave={handleSavePrizes} onRedeem={handleRedeem} />}
-          {tab === "history"  && <HistoryTab  history={history} />}
+          {tab === "extras"   && <ExtrasTab   onEarn={handleExtrasEarn} jokeShared={jokeShared} factShared={factShared} kidName={activeKid?.name || "He"} />}
+{tab === "history"  && <HistoryTab  history={history} />}
           {tab === "settings" && <SettingsTab familyCode={familyCode} soundEnabled={soundEnabled} onToggleSound={handleToggleSound} kids={kids} activeKidId={activeKidId} onAddKid={() => setShowAddKid(true)} onEditKid={k => setEditingKid(k)} onSwitchKid={handleSwitchKid} onSignOut={handleSignOut} />}
         </div>
       </div>
